@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fortune Pearl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;800&family=Ma+Shan+Zheng&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- Symbol art (original, inline SVG) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6c4"/><stop offset=".35" stop-color="#ffd54a"/>
+      <stop offset=".7" stop-color="#d79a1e"/><stop offset="1" stop-color="#7a4a08"/>
+    </linearGradient>
+    <linearGradient id="gGoldH" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8d6"/><stop offset=".5" stop-color="#f2b92e"/><stop offset="1" stop-color="#8a5506"/>
+    </linearGradient>
+    <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7a5c"/><stop offset=".45" stop-color="#e01b24"/><stop offset="1" stop-color="#6e0610"/>
+    </linearGradient>
+    <radialGradient id="gLantern" cx=".4" cy=".35" r=".7">
+      <stop offset="0" stop-color="#ffb08a"/><stop offset=".35" stop-color="#ff3b2f"/><stop offset=".8" stop-color="#b10d17"/><stop offset="1" stop-color="#5c040b"/>
+    </radialGradient>
+    <linearGradient id="gJade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4ffe6"/><stop offset=".4" stop-color="#3fd08a"/><stop offset="1" stop-color="#0b5232"/>
+    </linearGradient>
+    <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6ecff"/><stop offset=".45" stop-color="#3c8cff"/><stop offset="1" stop-color="#0d2f7a"/>
+    </linearGradient>
+    <linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3dcff"/><stop offset=".45" stop-color="#b04cff"/><stop offset="1" stop-color="#43107a"/>
+    </linearGradient>
+    <linearGradient id="gOrange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff0c8"/><stop offset=".45" stop-color="#ff9a1f"/><stop offset="1" stop-color="#8a3a00"/>
+    </linearGradient>
+    <linearGradient id="gKoi" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2d6"/><stop offset=".35" stop-color="#ff8a2a"/><stop offset=".8" stop-color="#d4231b"/><stop offset="1" stop-color="#7a0a0a"/>
+    </linearGradient>
+    <radialGradient id="gOrb" cx=".38" cy=".34" r=".72">
+      <stop offset="0" stop-color="#fffbe0"/><stop offset=".2" stop-color="#ffe066"/><stop offset=".5" stop-color="#ff8a1a"/>
+      <stop offset=".82" stop-color="#d9260f"/><stop offset="1" stop-color="#5a0804"/>
+    </radialGradient>
+    <radialGradient id="gFlame" cx=".5" cy=".7" r=".6">
+      <stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/><stop offset=".6" stop-color="#ff6a00" stop-opacity=".7"/><stop offset="1" stop-color="#ff2a00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="fShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+
+    <!-- WILD: dragon medallion -->
+    <symbol id="sym-wild" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <circle cx="50" cy="46" r="40" fill="url(#gGold)"/>
+        <circle cx="50" cy="46" r="33" fill="url(#gRed)" stroke="#5a0408" stroke-width="1.5"/>
+        <circle cx="50" cy="46" r="36.5" fill="none" stroke="#fff3b0" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>
+        <text x="50" y="60" text-anchor="middle" font-family="'Ma Shan Zheng', 'KaiTi', serif" font-size="42" fill="url(#gGold)" stroke="#5a2a00" stroke-width=".8">龍</text>
+        <path d="M8 74 L92 74 L86 84 L92 94 L8 94 L14 84 Z" fill="url(#gRed)" stroke="url(#gGold)" stroke-width="2.5"/>
+        <text x="50" y="90" text-anchor="middle" font-family="Cinzel, serif" font-weight="800" font-size="15" fill="url(#gGold)" stroke="#4a1a00" stroke-width=".6" letter-spacing="2">WILD</text>
+      </g>
+    </symbol>
+
+    <!-- Fire pearl (bonus) -->
+    <symbol id="sym-orb" viewBox="0 0 100 100">
+      <path d="M50 4 C58 18 70 12 72 26 C82 22 86 34 92 38 C84 40 90 52 84 58 L50 90 L16 58 C10 52 16 40 8 38 C14 34 18 22 28 26 C30 12 42 18 50 4Z" fill="url(#gFlame)"/>
+      <circle cx="50" cy="52" r="34" fill="url(#gOrb)" stroke="#ffe08a" stroke-width="2"/>
+      <ellipse cx="39" cy="38" rx="13" ry="8" fill="#fff" opacity=".55" transform="rotate(-30 39 38)"/>
+      <path d="M26 64 C36 72 58 76 74 62" fill="none" stroke="#ffd36b" stroke-width="2" opacity=".6"/>
+    </symbol>
+    <symbol id="sym-empty" viewBox="0 0 100 100"></symbol>
+
+    <!-- Gold ingot -->
+    <symbol id="sym-ingot" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <ellipse cx="50" cy="44" rx="20" ry="17" fill="url(#gGold)" stroke="#7a4a08" stroke-width="1.5"/>
+        <path d="M6 42 C18 46 30 54 50 54 C70 54 82 46 94 42 C92 62 80 82 50 82 C20 82 8 62 6 42Z" fill="url(#gGold)" stroke="#7a4a08" stroke-width="2"/>
+        <path d="M14 50 C26 58 40 62 50 62 C60 62 74 58 86 50" fill="none" stroke="#fff6c4" stroke-width="2" opacity=".8"/>
+        <ellipse cx="42" cy="36" rx="7" ry="4" fill="#fff" opacity=".7"/>
+        <text x="50" y="77" text-anchor="middle" font-family="'Ma Shan Zheng', serif" font-size="16" fill="#8a1a08">財</text>
+      </g>
+    </symbol>
+
+    <!-- Red lantern -->
+    <symbol id="sym-lantern" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <line x1="50" y1="2" x2="50" y2="12" stroke="#d79a1e" stroke-width="3"/>
+        <rect x="34" y="11" width="32" height="8" rx="2" fill="url(#gGold)"/>
+        <ellipse cx="50" cy="50" rx="36" ry="32" fill="url(#gLantern)" stroke="#5c040b" stroke-width="1.5"/>
+        <path d="M50 18 C34 30 34 70 50 82 M50 18 C66 30 66 70 50 82 M50 18 C22 30 22 70 50 82 M50 18 C78 30 78 70 50 82" fill="none" stroke="#ffcf5a" stroke-width="1.4" opacity=".7"/>
+        <circle cx="50" cy="50" r="13" fill="#ffd54a" opacity=".95"/>
+        <text x="50" y="57" text-anchor="middle" font-family="'Ma Shan Zheng', serif" font-size="20" fill="#a30d14">福</text>
+        <rect x="34" y="80" width="32" height="7" rx="2" fill="url(#gGold)"/>
+        <path d="M44 87 L42 99 M48 87 L47 99 M52 87 L53 99 M56 87 L58 99" stroke="#ff3b2f" stroke-width="2.2"/>
+      </g>
+    </symbol>
+
+    <!-- Koi -->
+    <symbol id="sym-koi" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <path d="M70 48 L94 26 C88 44 88 56 94 74 L70 54Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1.5"/>
+        <path d="M8 50 C20 26 52 22 72 46 L72 54 C52 78 20 74 8 50Z" fill="url(#gKoi)" stroke="#6a0a0a" stroke-width="1.8"/>
+        <path d="M38 30 C44 20 54 22 58 32Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1"/>
+        <path d="M40 68 C46 78 54 76 56 68Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1"/>
+        <path d="M30 42 Q36 50 30 58 M40 38 Q47 50 40 62 M50 38 Q57 50 50 62" fill="none" stroke="#fff2d6" stroke-width="1.6" opacity=".75"/>
+        <circle cx="19" cy="46" r="4" fill="#fff"/><circle cx="18" cy="46" r="2.2" fill="#111"/>
+        <path d="M10 54 C6 58 4 64 6 68" fill="none" stroke="#ffd36b" stroke-width="1.5"/>
+      </g>
+    </symbol>
+
+    <!-- Firecrackers -->
+    <symbol id="sym-cracker" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <g transform="rotate(-18 50 60)">
+          <rect x="22" y="34" width="16" height="54" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
+          <rect x="62" y="34" width="16" height="54" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
+          <rect x="42" y="28" width="16" height="60" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
+          <rect x="20" y="52" width="60" height="8" fill="url(#gGold)"/>
+          <rect x="20" y="40" width="60" height="3" fill="#ffd54a" opacity=".8"/>
+          <rect x="20" y="76" width="60" height="3" fill="#ffd54a" opacity=".8"/>
+          <path d="M50 28 C50 18 58 16 60 10" fill="none" stroke="#5a3a1a" stroke-width="2"/>
+        </g>
+        <path d="M66 8 L69 15 L76 12 L71 18 L78 22 L70 22 L70 30 L66 23 L60 27 L63 20 L56 17 L64 16Z" fill="#fff3a0" stroke="#ff9a1f" stroke-width="1.2"/>
+      </g>
+    </symbol>
+
+    <!-- Royals -->
+    <symbol id="sym-A" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Cinzel Decorative', Cinzel, serif" font-weight="900" font-size="74" fill="url(#gRed)" stroke="url(#gGoldH)" stroke-width="3.5" paint-order="stroke" filter="url(#fShadow)">A</text></symbol>
+    <symbol id="sym-K" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Cinzel Decorative', Cinzel, serif" font-weight="900" font-size="74" fill="url(#gPurple)" stroke="url(#gGoldH)" stroke-width="3.5" paint-order="stroke" filter="url(#fShadow)">K</text></symbol>
+    <symbol id="sym-Q" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Cinzel Decorative', Cinzel, serif" font-weight="900" font-size="74" fill="url(#gJade)" stroke="url(#gGoldH)" stroke-width="3.5" paint-order="stroke" filter="url(#fShadow)">Q</text></symbol>
+    <symbol id="sym-J" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Cinzel Decorative', Cinzel, serif" font-weight="900" font-size="74" fill="url(#gBlue)" stroke="url(#gGoldH)" stroke-width="3.5" paint-order="stroke" filter="url(#fShadow)">J</text></symbol>
+    <symbol id="sym-T" viewBox="0 0 100 100"><text x="50" y="78" text-anchor="middle" font-family="'Cinzel Decorative', Cinzel, serif" font-weight="900" font-size="62" fill="url(#gOrange)" stroke="url(#gGoldH)" stroke-width="3.5" paint-order="stroke" filter="url(#fShadow)" letter-spacing="-4">10</text></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <header class="marquee">
+    <div class="marquee-cn">福 珠</div>
+    <h1 class="marquee-title">FORTUNE PEARL</h1>
+    <div class="marquee-sub">HOLD &amp; SPIN</div>
+  </header>
+
+  <section class="jackpots" id="jackpots">
+    <div class="jp jp-grand"><span class="jp-name">GRAND</span><span class="jp-val" data-jp="GRAND">0</span></div>
+    <div class="jp jp-major"><span class="jp-name">MAJOR</span><span class="jp-val" data-jp="MAJOR">0</span></div>
+    <div class="jp jp-minor"><span class="jp-name">MINOR</span><span class="jp-val" data-jp="MINOR">0</span></div>
+    <div class="jp jp-mini"><span class="jp-name">MINI</span><span class="jp-val" data-jp="MINI">0</span></div>
+  </section>
+
+  <section class="cabinet">
+    <div class="frame">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="respin-hud" id="respinHud">
+        <span class="respin-label">RESPINS</span>
+        <span class="respin-lights"><i></i><i></i><i></i></span>
+      </div>
+      <div class="reels" id="reels"></div>
+    </div>
+  </section>
+
+  <div class="message" id="message">6 OR MORE PEARLS TRIGGER HOLD &amp; SPIN</div>
+
+  <footer class="console">
+    <div class="meter"><span class="meter-label">CREDIT</span><span class="meter-val" id="credit">0</span></div>
+    <div class="meter bet">
+      <button class="btn-round small" id="betDown" aria-label="Lower bet">−</button>
+      <div><span class="meter-label">BET</span><span class="meter-val" id="bet">0</span></div>
+      <button class="btn-round small" id="betUp" aria-label="Raise bet">+</button>
+    </div>
+    <div class="meter"><span class="meter-label">WIN</span><span class="meter-val win" id="win">0</span></div>
+    <div class="controls">
+      <button class="btn-pill" id="btnInfo">PAYS</button>
+      <button class="btn-pill" id="btnTurbo">TURBO</button>
+      <button class="btn-pill" id="btnAuto">AUTO</button>
+      <button class="btn-pill" id="btnSound">SOUND</button>
+      <button class="btn-spin" id="btnSpin" aria-label="Spin"><span>SPIN</span></button>
+    </div>
+  </footer>
+</div>
+
+<div class="overlay banner" id="banner" hidden>
+  <div class="banner-inner"><div class="banner-title" id="bannerTitle"></div><div class="banner-sub" id="bannerSub"></div></div>
+</div>
+
+<div class="overlay bigwin" id="bigwin" hidden>
+  <canvas id="coinRain"></canvas>
+  <div class="bigwin-inner">
+    <div class="bigwin-cn">恭喜發財</div>
+    <div class="bigwin-title" id="bigwinTitle">BIG WIN</div>
+    <div class="bigwin-amount" id="bigwinAmount">0</div>
+    <button class="btn-pill gold" id="bigwinCollect">COLLECT</button>
+  </div>
+</div>
+
+<div class="overlay paytable" id="paytable" hidden>
+  <div class="paytable-inner">
+    <h2>PAYS</h2>
+    <p class="pt-note">243 ways: matching symbols on adjacent reels from the left pay. Values shown are for the current bet, per way.</p>
+    <div class="pt-grid" id="ptGrid"></div>
+    <h3>HOLD &amp; SPIN</h3>
+    <p class="pt-note">Land 6 or more fire pearls to start with 3 respins. Pearls lock in place and every new pearl resets respins to 3. Fill all 15 spots to win the GRAND. Pearls may carry MINI, MINOR or MAJOR jackpots.</p>
+    <p class="pt-note small">Play money only. Custom sounds: drop files into <code>sounds/custom/</code> (see README).</p>
+    <button class="btn-pill gold" id="ptClose">CLOSE</button>
+  </div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
