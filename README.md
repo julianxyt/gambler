@@ -1,4 +1,4 @@
-# Fortune Pearl
+# Bangor Bonanza
 
 A browser pokie with a Chinese good-fortune theme: 5x3 reels, 243 ways, and a Hold & Spin pearl feature with MINI / MINOR / MAJOR / GRAND jackpots. Play money only.
 

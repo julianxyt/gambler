@@ -1,5 +1,5 @@
 /*
- * Fortune Pearl sound engine.
+ * Bangor Bonanza sound engine.
  * Every sound is synthesised with the Web Audio API (no downloaded audio).
  * Any sound can be replaced by dropping a file into sounds/custom/ (see README).
  */
