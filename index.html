@@ -72,57 +72,129 @@
     </symbol>
     <symbol id="sym-empty" viewBox="0 0 100 100"></symbol>
 
-    <!-- Gold ingot -->
-    <symbol id="sym-ingot" viewBox="0 0 100 100">
-      <g filter="url(#fShadow)">
-        <ellipse cx="50" cy="44" rx="20" ry="17" fill="url(#gGold)" stroke="#7a4a08" stroke-width="1.5"/>
-        <path d="M6 42 C18 46 30 54 50 54 C70 54 82 46 94 42 C92 62 80 82 50 82 C20 82 8 62 6 42Z" fill="url(#gGold)" stroke="#7a4a08" stroke-width="2"/>
-        <path d="M14 50 C26 58 40 62 50 62 C60 62 74 58 86 50" fill="none" stroke="#fff6c4" stroke-width="2" opacity=".8"/>
-        <ellipse cx="42" cy="36" rx="7" ry="4" fill="#fff" opacity=".7"/>
-        <text x="50" y="77" text-anchor="middle" font-family="'Ma Shan Zheng', serif" font-size="16" fill="#8a1a08">財</text>
-      </g>
-    </symbol>
+    <!-- Character premiums -->
+    <clipPath id="cpPortrait"><circle cx="50" cy="50" r="41.5"/></clipPath>
+    <radialGradient id="gBgPink" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#ffe3ee"/><stop offset=".6" stop-color="#ff9ec0"/><stop offset="1" stop-color="#b03a6a"/></radialGradient>
+    <radialGradient id="gBgPurple" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#f0d8ff"/><stop offset=".6" stop-color="#a45ae8"/><stop offset="1" stop-color="#3e1072"/></radialGradient>
+    <radialGradient id="gBgBlue" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#dcefff"/><stop offset=".6" stop-color="#5aa0f0"/><stop offset="1" stop-color="#14397a"/></radialGradient>
+    <radialGradient id="gBgJade" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#e0ffef"/><stop offset=".6" stop-color="#4cc890"/><stop offset="1" stop-color="#0b5232"/></radialGradient>
+    <linearGradient id="gSkinLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0e4"/><stop offset="1" stop-color="#f5ccb0"/></linearGradient>
+    <linearGradient id="gSkinTan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6d0b0"/><stop offset="1" stop-color="#d9a07a"/></linearGradient>
+    <linearGradient id="gHairBrown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3626"/><stop offset="1" stop-color="#2e1a12"/></linearGradient>
+    <linearGradient id="gHairBalayage" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1010"/><stop offset=".4" stop-color="#3a2216"/><stop offset=".75" stop-color="#a8703a"/><stop offset="1" stop-color="#e2b070"/></linearGradient>
+    <linearGradient id="gLipPink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a7a"/><stop offset="1" stop-color="#ff9db0"/></linearGradient>
+    <linearGradient id="gLipNude" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8606a"/><stop offset="1" stop-color="#d88a88"/></linearGradient>
 
-    <!-- Red lantern -->
-    <symbol id="sym-lantern" viewBox="0 0 100 100">
+    <symbol id="sym-kgirl" viewBox="0 0 100 100">
       <g filter="url(#fShadow)">
-        <line x1="50" y1="2" x2="50" y2="12" stroke="#d79a1e" stroke-width="3"/>
-        <rect x="34" y="11" width="32" height="8" rx="2" fill="url(#gGold)"/>
-        <ellipse cx="50" cy="50" rx="36" ry="32" fill="url(#gLantern)" stroke="#5c040b" stroke-width="1.5"/>
-        <path d="M50 18 C34 30 34 70 50 82 M50 18 C66 30 66 70 50 82 M50 18 C22 30 22 70 50 82 M50 18 C78 30 78 70 50 82" fill="none" stroke="#ffcf5a" stroke-width="1.4" opacity=".7"/>
-        <circle cx="50" cy="50" r="13" fill="#ffd54a" opacity=".95"/>
-        <text x="50" y="57" text-anchor="middle" font-family="'Ma Shan Zheng', serif" font-size="20" fill="#a30d14">福</text>
-        <rect x="34" y="80" width="32" height="7" rx="2" fill="url(#gGold)"/>
-        <path d="M44 87 L42 99 M48 87 L47 99 M52 87 L53 99 M56 87 L58 99" stroke="#ff3b2f" stroke-width="2.2"/>
-      </g>
-    </symbol>
-
-    <!-- Koi -->
-    <symbol id="sym-koi" viewBox="0 0 100 100">
-      <g filter="url(#fShadow)">
-        <path d="M70 48 L94 26 C88 44 88 56 94 74 L70 54Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1.5"/>
-        <path d="M8 50 C20 26 52 22 72 46 L72 54 C52 78 20 74 8 50Z" fill="url(#gKoi)" stroke="#6a0a0a" stroke-width="1.8"/>
-        <path d="M38 30 C44 20 54 22 58 32Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1"/>
-        <path d="M40 68 C46 78 54 76 56 68Z" fill="url(#gOrange)" stroke="#7a2a00" stroke-width="1"/>
-        <path d="M30 42 Q36 50 30 58 M40 38 Q47 50 40 62 M50 38 Q57 50 50 62" fill="none" stroke="#fff2d6" stroke-width="1.6" opacity=".75"/>
-        <circle cx="19" cy="46" r="4" fill="#fff"/><circle cx="18" cy="46" r="2.2" fill="#111"/>
-        <path d="M10 54 C6 58 4 64 6 68" fill="none" stroke="#ffd36b" stroke-width="1.5"/>
-      </g>
-    </symbol>
-
-    <!-- Firecrackers -->
-    <symbol id="sym-cracker" viewBox="0 0 100 100">
-      <g filter="url(#fShadow)">
-        <g transform="rotate(-18 50 60)">
-          <rect x="22" y="34" width="16" height="54" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
-          <rect x="62" y="34" width="16" height="54" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
-          <rect x="42" y="28" width="16" height="60" rx="3" fill="url(#gRed)" stroke="#5c040b" stroke-width="1.4"/>
-          <rect x="20" y="52" width="60" height="8" fill="url(#gGold)"/>
-          <rect x="20" y="40" width="60" height="3" fill="#ffd54a" opacity=".8"/>
-          <rect x="20" y="76" width="60" height="3" fill="#ffd54a" opacity=".8"/>
-          <path d="M50 28 C50 18 58 16 60 10" fill="none" stroke="#5a3a1a" stroke-width="2"/>
+        <circle cx="50" cy="50" r="47" fill="url(#gGold)"/>
+        <circle cx="50" cy="50" r="42" fill="url(#gBgPink)" stroke="#5a2a00" stroke-width="1"/>
+        <circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff3b0" stroke-width=".8" stroke-dasharray="2 2.5" opacity=".8"/>
+        <g clip-path="url(#cpPortrait)">
+          <path d="M23 52 C20 26 34 13 50 13 C66 13 80 26 77 52 L80 84 L20 84Z" fill="url(#gHairBrown)"/>
+          <path d="M14 100 C17 84 32 77 50 77 C68 77 83 84 86 100Z" fill="#fdf8ff"/>
+          <path d="M38 78 L50 88 L62 78" fill="#fff" stroke="#c9b6f0" stroke-width="1.6"/>
+          <rect x="44" y="62" width="12" height="17" rx="5" fill="url(#gSkinLight)"/>
+          <path d="M30 43 C30 29 39 23 50 23 C61 23 70 29 70 43 C70 58 61 69 50 69 C39 69 30 58 30 43Z" fill="url(#gSkinLight)"/>
+          <path d="M27 50 C24 27 37 15 50 15 C63 15 76 27 73 50 C70 41 68 35 66 32 C63 38 58 40 55 37 C53 40 47 40 45 37 C42 40 37 38 34 32 C32 36 30 41 27 50Z" fill="url(#gHairBrown)"/>
+          <path d="M36 38.5 Q41 37 45.5 38.5 M54.5 38.5 Q59 37 64 38.5" fill="none" stroke="#4a2c1e" stroke-width="1.3" stroke-linecap="round"/>
+          <ellipse cx="41" cy="46" rx="4.3" ry="5.2" fill="#2a1810"/>
+          <ellipse cx="59" cy="46" rx="4.3" ry="5.2" fill="#2a1810"/>
+          <circle cx="42.6" cy="44.2" r="1.7" fill="#fff"/><circle cx="60.6" cy="44.2" r="1.7" fill="#fff"/>
+          <circle cx="39.8" cy="48" r=".8" fill="#fff"/><circle cx="57.8" cy="48" r=".8" fill="#fff"/>
+          <path d="M36 43 Q41 39.5 46 43 M54 43 Q59 39.5 64 43" fill="none" stroke="#1a0f0a" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M37 51.5 Q41 53 45 51.5 M55 51.5 Q59 53 63 51.5" fill="none" stroke="#e8a890" stroke-width=".8" opacity=".8"/>
+          <ellipse cx="36" cy="55" rx="5" ry="2.6" fill="#ff8fa3" opacity=".5"/>
+          <ellipse cx="64" cy="55" rx="5" ry="2.6" fill="#ff8fa3" opacity=".5"/>
+          <path d="M49.5 53 Q51 55 49.5 56" fill="none" stroke="#d9a088" stroke-width="1"/>
+          <path d="M45.5 60 Q50 58.5 54.5 60 Q50 64.5 45.5 60Z" fill="url(#gLipPink)"/>
+          <g transform="rotate(-25 66 25)"><rect x="60" y="22" width="13" height="5" rx="2.5" fill="#ffe27a" stroke="#d79a1e" stroke-width=".8"/><circle cx="62.5" cy="24.5" r="1.2" fill="#fff"/></g>
         </g>
-        <path d="M66 8 L69 15 L76 12 L71 18 L78 22 L70 22 L70 30 L66 23 L60 27 L63 20 L56 17 L64 16Z" fill="#fff3a0" stroke="#ff9a1f" stroke-width="1.2"/>
+      </g>
+    </symbol>
+    <symbol id="sym-abg" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <circle cx="50" cy="50" r="47" fill="url(#gGold)"/>
+        <circle cx="50" cy="50" r="42" fill="url(#gBgPurple)" stroke="#5a2a00" stroke-width="1"/>
+        <circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff3b0" stroke-width=".8" stroke-dasharray="2 2.5" opacity=".8"/>
+        <g clip-path="url(#cpPortrait)">
+          <path d="M22 50 C19 24 34 12 50 12 C66 12 81 24 78 50 C80 66 84 80 88 100 L12 100 C16 80 20 66 22 50Z" fill="url(#gHairBalayage)"/>
+          <path d="M16 100 C19 86 32 80 50 80 C68 80 81 86 84 100Z" fill="url(#gSkinTan)"/>
+          <path d="M26 100 C28 92 38 90 50 90 C62 90 72 92 74 100Z" fill="#1a1a22"/>
+          <path d="M33 84 L36 92 M67 84 L64 92" stroke="#1a1a22" stroke-width="1.6"/>
+          <rect x="44" y="62" width="12" height="20" rx="5" fill="url(#gSkinTan)"/>
+          <path d="M31 42 C31 28 40 22 50 22 C60 22 69 28 69 42 C69 57 61 69 50 69 C39 69 31 57 31 42Z" fill="url(#gSkinTan)"/>
+          <path d="M50 13 Q35 15 31.5 33 Q29.5 48 27 66 L20.5 69 Q15.5 40 26 23 Q36 12.5 50 13Z" fill="url(#gHairBalayage)"/>
+          <path d="M50 13 Q65 15 68.5 33 Q70.5 48 73 66 L79.5 69 Q84.5 40 74 23 Q64 12.5 50 13Z" fill="url(#gHairBalayage)"/>
+          <path d="M50 13.5 L50 20" stroke="#d9a07a" stroke-width=".8" opacity=".7"/>
+          <path d="M36 46 Q41.5 42 47 45.5 Q41.5 49 36 46Z M64 46 Q58.5 42 53 45.5 Q58.5 49 64 46Z" fill="#fff"/>
+          <circle cx="41.8" cy="45.6" r="2.8" fill="#2a1408"/><circle cx="58.2" cy="45.6" r="2.8" fill="#2a1408"/>
+          <circle cx="42.8" cy="44.7" r=".9" fill="#fff"/><circle cx="59.2" cy="44.7" r=".9" fill="#fff"/>
+          <path d="M47 45.5 Q41.5 41.6 36 46 L32.4 43.2 M53 45.5 Q58.5 41.6 64 46 L67.6 43.2" fill="none" stroke="#0a0505" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M37.6 44.6 L36.2 42.7 M40 43.4 L39.3 41.5 M62.4 44.6 L63.8 42.7 M60 43.4 L60.7 41.5" stroke="#0a0505" stroke-width=".8" stroke-linecap="round"/>
+          <path d="M37 47.6 Q41.5 49.6 46 47.4 M63 47.6 Q58.5 49.6 54 47.4" fill="none" stroke="#6a3a2a" stroke-width=".6" opacity=".7"/>
+          <path d="M35.5 38 Q40 33.5 46.5 37 M53.5 37 Q60 33.5 64.5 38" fill="none" stroke="#2a1810" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M36 37 Q41 35 46 37.5 M54 37.5 Q59 35 64 37" fill="none" stroke="#e8b0a0" stroke-width=".6" opacity=".6"/>
+          <path d="M49.5 50 L48.5 55 Q50 56 51.5 55" fill="none" stroke="#b07a58" stroke-width="1"/>
+          <ellipse cx="36" cy="54" rx="4.5" ry="2.2" fill="#e8907a" opacity=".35"/>
+          <ellipse cx="64" cy="54" rx="4.5" ry="2.2" fill="#e8907a" opacity=".35"/>
+          <path d="M44 60 Q47 58 50 59 Q53 58 56 60 Q50 65.5 44 60Z" fill="url(#gLipNude)"/>
+          <path d="M47 61.6 Q50 62.6 53 61.6" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+          <circle cx="30.5" cy="59" r="5" fill="none" stroke="url(#gGoldH)" stroke-width="1.8"/>
+          <circle cx="69.5" cy="59" r="5" fill="none" stroke="url(#gGoldH)" stroke-width="1.8"/>
+        </g>
+      </g>
+    </symbol>
+    <symbol id="sym-pomw" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <circle cx="50" cy="50" r="47" fill="url(#gGold)"/>
+        <circle cx="50" cy="50" r="42" fill="url(#gBgBlue)" stroke="#5a2a00" stroke-width="1"/>
+        <circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff3b0" stroke-width=".8" stroke-dasharray="2 2.5" opacity=".8"/>
+        <g clip-path="url(#cpPortrait)">
+          <path d="M50.0 66.0 Q56.6 64.0 61.5 67.5 Q68.7 67.4 71.2 71.9 Q77.9 73.6 77.7 78.3 Q83.0 81.6 80.0 86.0 Q83.0 90.4 77.7 93.7 Q77.9 98.4 71.2 100.1 Q68.7 104.6 61.5 104.5 Q56.6 108.0 50.0 106.0 Q43.4 108.0 38.5 104.5 Q31.3 104.6 28.8 100.1 Q22.1 98.4 22.3 93.7 Q17.0 90.4 20.0 86.0 Q17.0 81.6 22.3 78.3 Q22.1 73.6 28.8 71.9 Q31.3 67.4 38.5 67.5 Q43.4 64.0 50.0 66.0Z" fill="#fffdf8" stroke="#cfc6b8" stroke-width="1"/>
+          <path d="M28 30 L33 9 L45 24Z" fill="#fffdf8" stroke="#cfc6b8" stroke-width="1"/>
+          <path d="M72 30 L67 9 L55 24Z" fill="#fffdf8" stroke="#cfc6b8" stroke-width="1"/>
+          <path d="M32 26 L34 15 L40 23Z" fill="#f4a3b4"/>
+          <path d="M68 26 L66 15 L60 23Z" fill="#f4a3b4"/>
+          <path d="M50.0 24.0 Q54.9 21.6 58.6 25.4 Q64.0 24.7 66.1 29.4 Q71.4 30.4 71.7 35.5 Q76.3 38.2 74.6 43.0 Q78.0 47.0 74.6 51.0 Q76.3 55.8 71.7 58.5 Q71.4 63.6 66.1 64.6 Q64.0 69.3 58.6 68.6 Q54.9 72.4 50.0 70.0 Q45.1 72.4 41.4 68.6 Q36.0 69.3 33.9 64.6 Q28.6 63.6 28.3 58.5 Q23.7 55.8 25.4 51.0 Q22.0 47.0 25.4 43.0 Q23.7 38.2 28.3 35.5 Q28.6 30.4 33.9 29.4 Q36.0 24.7 41.4 25.4 Q45.1 21.6 50.0 24.0Z" fill="#fffdf8" stroke="#cfc6b8" stroke-width="1"/>
+          <path d="M71.0 54.0 Q72.9 56.2 70.3 57.9 Q71.3 60.3 68.2 61.5 Q68.3 64.0 64.8 64.6 Q64.1 67.1 60.5 67.0 Q58.8 69.2 55.4 68.5 Q53.0 70.4 50.0 69.0 Q47.0 70.4 44.6 68.5 Q41.2 69.2 39.5 67.0 Q35.9 67.1 35.2 64.6 Q31.7 64.0 31.8 61.5 Q28.7 60.3 29.7 57.9 Q27.1 56.2 29.0 54.0Z" fill="#e2dcd2" opacity=".55"/>
+          <ellipse cx="50" cy="56" rx="11" ry="8" fill="#ffffff"/>
+          <circle cx="40" cy="46" r="4.6" fill="#1a0f0a"/><circle cx="60" cy="46" r="4.6" fill="#1a0f0a"/>
+          <circle cx="41.6" cy="44.4" r="1.6" fill="#fff"/><circle cx="61.6" cy="44.4" r="1.6" fill="#fff"/>
+          <circle cx="38.8" cy="47.6" r=".7" fill="#fff" opacity=".8"/><circle cx="58.8" cy="47.6" r=".7" fill="#fff" opacity=".8"/>
+          <ellipse cx="50" cy="52.5" rx="3.8" ry="2.8" fill="#1a0f0a"/>
+          <ellipse cx="49" cy="51.6" rx="1.2" ry=".7" fill="#fff" opacity=".6"/>
+          <path d="M50 55 L50 57.5 M45.5 57 Q50 61 54.5 57" fill="none" stroke="#1a0f0a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M47.5 59 Q50 65 52.5 59Z" fill="#ff7a92"/>
+          <ellipse cx="34" cy="54" rx="4" ry="2.2" fill="#ff8fa3" opacity=".35"/>
+          <ellipse cx="66" cy="54" rx="4" ry="2.2" fill="#ff8fa3" opacity=".35"/>
+        </g>
+      </g>
+    </symbol>
+    <symbol id="sym-pomb" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <circle cx="50" cy="50" r="47" fill="url(#gGold)"/>
+        <circle cx="50" cy="50" r="42" fill="url(#gBgJade)" stroke="#5a2a00" stroke-width="1"/>
+        <circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff3b0" stroke-width=".8" stroke-dasharray="2 2.5" opacity=".8"/>
+        <g clip-path="url(#cpPortrait)">
+          <path d="M50.0 66.0 Q56.6 64.0 61.5 67.5 Q68.7 67.4 71.2 71.9 Q77.9 73.6 77.7 78.3 Q83.0 81.6 80.0 86.0 Q83.0 90.4 77.7 93.7 Q77.9 98.4 71.2 100.1 Q68.7 104.6 61.5 104.5 Q56.6 108.0 50.0 106.0 Q43.4 108.0 38.5 104.5 Q31.3 104.6 28.8 100.1 Q22.1 98.4 22.3 93.7 Q17.0 90.4 20.0 86.0 Q17.0 81.6 22.3 78.3 Q22.1 73.6 28.8 71.9 Q31.3 67.4 38.5 67.5 Q43.4 64.0 50.0 66.0Z" fill="#d9853a" stroke="#8a4a14" stroke-width="1"/>
+          <path d="M28 30 L33 9 L45 24Z" fill="#d9853a" stroke="#8a4a14" stroke-width="1"/>
+          <path d="M72 30 L67 9 L55 24Z" fill="#d9853a" stroke="#8a4a14" stroke-width="1"/>
+          <path d="M32 26 L34 15 L40 23Z" fill="#f4a3b4"/>
+          <path d="M68 26 L66 15 L60 23Z" fill="#f4a3b4"/>
+          <path d="M50.0 24.0 Q54.9 21.6 58.6 25.4 Q64.0 24.7 66.1 29.4 Q71.4 30.4 71.7 35.5 Q76.3 38.2 74.6 43.0 Q78.0 47.0 74.6 51.0 Q76.3 55.8 71.7 58.5 Q71.4 63.6 66.1 64.6 Q64.0 69.3 58.6 68.6 Q54.9 72.4 50.0 70.0 Q45.1 72.4 41.4 68.6 Q36.0 69.3 33.9 64.6 Q28.6 63.6 28.3 58.5 Q23.7 55.8 25.4 51.0 Q22.0 47.0 25.4 43.0 Q23.7 38.2 28.3 35.5 Q28.6 30.4 33.9 29.4 Q36.0 24.7 41.4 25.4 Q45.1 21.6 50.0 24.0Z" fill="#d9853a" stroke="#8a4a14" stroke-width="1"/>
+          <path d="M71.0 54.0 Q72.9 56.2 70.3 57.9 Q71.3 60.3 68.2 61.5 Q68.3 64.0 64.8 64.6 Q64.1 67.1 60.5 67.0 Q58.8 69.2 55.4 68.5 Q53.0 70.4 50.0 69.0 Q47.0 70.4 44.6 68.5 Q41.2 69.2 39.5 67.0 Q35.9 67.1 35.2 64.6 Q31.7 64.0 31.8 61.5 Q28.7 60.3 29.7 57.9 Q27.1 56.2 29.0 54.0Z" fill="#a85a1e" opacity=".55"/>
+          <ellipse cx="50" cy="56" rx="11" ry="8" fill="#f6d6a8"/>
+          <circle cx="40" cy="46" r="4.6" fill="#1a0f0a"/><circle cx="60" cy="46" r="4.6" fill="#1a0f0a"/>
+          <circle cx="41.6" cy="44.4" r="1.6" fill="#fff"/><circle cx="61.6" cy="44.4" r="1.6" fill="#fff"/>
+          <circle cx="38.8" cy="47.6" r=".7" fill="#fff" opacity=".8"/><circle cx="58.8" cy="47.6" r=".7" fill="#fff" opacity=".8"/>
+          <ellipse cx="50" cy="52.5" rx="3.8" ry="2.8" fill="#1a0f0a"/>
+          <ellipse cx="49" cy="51.6" rx="1.2" ry=".7" fill="#fff" opacity=".6"/>
+          <path d="M50 55 L50 57.5 M45.5 57 Q50 61 54.5 57" fill="none" stroke="#1a0f0a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M47.5 59 Q50 65 52.5 59Z" fill="#ff7a92"/>
+          <ellipse cx="34" cy="54" rx="4" ry="2.2" fill="#ff8fa3" opacity=".35"/>
+          <ellipse cx="66" cy="54" rx="4" ry="2.2" fill="#ff8fa3" opacity=".35"/>
+        </g>
       </g>
     </symbol>
 

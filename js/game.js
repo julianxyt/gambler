@@ -4,11 +4,11 @@
   // ---------- Config ----------
   // Pays are multiples of the total bet, per way (243 ways).
   const PAYS = {
-    ingot: [0.3, 1, 4], lantern: [0.2, 0.6, 2], koi: [0.16, 0.4, 1.5], cracker: [0.12, 0.3, 1],
+    kgirl: [0.3, 1, 4], abg: [0.2, 0.6, 2], pomw: [0.16, 0.4, 1.5], pomb: [0.12, 0.3, 1],
     A: [0.08, 0.2, 0.6], K: [0.06, 0.15, 0.5], Q: [0.06, 0.15, 0.5], J: [0.04, 0.1, 0.4], T: [0.04, 0.1, 0.4],
   };
-  const NAMES = { ingot: 'Gold Ingot', lantern: 'Lantern', koi: 'Koi', cracker: 'Firecrackers', A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10' };
-  const WEIGHTS = { ingot: 3, lantern: 4, koi: 5, cracker: 6, A: 8, K: 9, Q: 9, J: 10, T: 10, wild: 2, orb: 12 };
+  const NAMES = { kgirl: 'Korean Girl', abg: 'ABG', pomw: 'White Pom', pomb: 'Brown Pom', A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10' };
+  const WEIGHTS = { kgirl: 3, abg: 4, pomw: 5, pomb: 6, A: 8, K: 9, Q: 9, J: 10, T: 10, wild: 2, orb: 12 };
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
   const ORB_MULTS = [[1, 20], [2, 18], [3, 14], [4, 10], [5, 9], [8, 6], [10, 4], [15, 2], [20, 1]];
