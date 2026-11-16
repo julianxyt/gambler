@@ -559,7 +559,7 @@ button:disabled { cursor: default; filter: grayscale(.7) brightness(.6); }
   background: repeating-conic-gradient(rgba(255, 220, 120, .1) 0 5deg, transparent 5deg 12deg); pointer-events: none;
 }
 .gamble::after { /* big lucky character watermark */
-  content: "\798F"; position: absolute; left: 4%; top: 6%; font-family: 'Ma Shan Zheng', serif; font-size: min(70vh, 60vw); line-height: 1;
+  content: "\5F20\6E90\4F1F"; position: absolute; left: 50%; top: 50%; translate: -50% -50%; white-space: nowrap; font-family: 'Ma Shan Zheng', serif; font-size: min(40vh, 30vw); line-height: 1;
   color: rgba(255, 170, 40, .22); transform: rotate(-8deg); pointer-events: none;
 }
 .g-screen {

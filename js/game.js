@@ -15,7 +15,14 @@
   const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
-  const RIG_SPIN = 12;               // this paid spin always lands Hold & Spin and fills all 15 (see reveal())
+  // The rigged feature (Hold & Spin that fills all 15, then the reveal) lands on a random paid spin,
+  // drawn from a bell curve around spin 20 (sd 4). No feature of any kind can land in the first 10 spins.
+  const QUIET_SPINS = 10;
+  const RIG_SPIN = (() => {
+    let z = 0; for (let i = 0; i < 6; i++) z += Math.random(); // sum of 6 uniforms ~ normal(3, 0.71)
+    const n = Math.round(20 + ((z - 3) / 0.7071) * 4);
+    return Math.min(32, Math.max(QUIET_SPINS + 1, n));
+  })();
   const GAMBLE_MAX = 5;
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
@@ -386,6 +393,7 @@
     S.spins++;
     let forced = S.forced; S.forced = null;
     if (!forced && S.spins === RIG_SPIN && !S.rigDone) { forced = rigGrid(); S.rig = true; S.auto = false; }
+    if (!forced && S.spins <= QUIET_SPINS) forced = quietGrid();
 
     const res = await playReels(forced, false);
     await settle(res, false);
@@ -400,7 +408,7 @@
 
   // Spin all five reels to `forced` (or a random grid). Returns what landed.
   async function playReels(forced, free) {
-    message(free ? 'FREE SPIN...' : 'GOOD FORTUNE...');
+    message(free ? 'FREE SPIN...' : S.spins % 2 ? 'WISHING FOR GOOD FORTUNE...' : 'WISHING FOR HINGE BADDIES...');
     Sound.spinStart();
     const grid = forced || makeGrid();
     const base = S.turbo ? 380 : 750, step = S.turbo ? 110 : 210, anticMs = S.turbo ? 900 : 1700;
@@ -445,12 +453,26 @@
         await payWin(total);
       }
     } else if (!free) {
-      message(landed >= 3 ? `${landed} GIRLS - ${TRIGGER} TRIGGER HOLD & SPIN` : scatters === 2 ? '2 FREE SPINS SYMBOLS - SO CLOSE!' : 'SPIN AGAIN');
+      message(landed >= 3 ? `${landed} BADDIES - ${TRIGGER} TRIGGER HOLD & SPIN` : scatters === 2 ? '2 FREE SPINS SYMBOLS - SO CLOSE!' : 'SPIN AGAIN');
     }
     if (landed >= TRIGGER) { await sleep(500); clearWins(); await holdAndSpin(grid); }
   }
 
-  // The rigged spin: exactly six girls, no free spins symbols.
+  // Early spins: a normal random grid, but capped below the Hold & Spin and free spins triggers.
+  function quietGrid() {
+    const g = makeGrid();
+    const filler = () => ({ s: ['J', 'Q', 'K', 'A', 'cherry', 'grapes'][(Math.random() * 6) | 0] });
+    const cells = shuffle(g.flatMap((col, r) => col.map((c, row) => [r, row])));
+    let orbs = 0, scat = 0;
+    for (const [r, row] of cells) {
+      const c = g[r][row];
+      if (c.s === 'orb' && ++orbs >= TRIGGER) g[r][row] = filler();
+      if (c.s === 'scatter' && ++scat >= 3) g[r][row] = filler();
+    }
+    return g;
+  }
+
+  // The rigged spin: exactly six baddies, no free spins symbols.
   function rigGrid() {
     const g = makeGrid().map((col) => col.map((c) => (c.s === 'orb' || c.s === 'scatter' ? { s: ['J', 'Q', 'K', 'cherry'][(Math.random() * 4) | 0] } : c)));
     shuffle([...Array(15).keys()]).slice(0, TRIGGER).forEach((i) => { g[Math.floor(i / 3)][i % 3] = makeOrb(false); });
@@ -486,9 +508,9 @@
     S.feature = true; clearWins(); updateUI();
     const app = $('app'); const hud = $('respinHud');
     const girlsIn = grid.flat().filter((c) => c.s === 'orb');
-    await charShowcase({ pic: girlsIn[(Math.random() * girlsIn.length) | 0].g, line1: `${girlsIn.length} GIRLS!`, line2: 'HOLD & SPIN', big: true });
+    await charShowcase({ pic: girlsIn[(Math.random() * girlsIn.length) | 0].g, line1: `${girlsIn.length} BADDIES!`, line2: 'HOLD & SPIN', big: true });
     Sound.featureTrigger();
-    await banner('HOLD & SPIN', '3 RESPINS - EVERY NEW GIRL RESETS TO 3', 2600);
+    await banner('HOLD & SPIN', '3 RESPINS - EVERY NEW BADDIE RESETS TO 3', 2600);
     app.classList.add('feature');
 
     const cells = [];
@@ -498,7 +520,7 @@
     let respins = 3, locked = cells.filter((c) => c.orb).length;
     const lights = () => hud.querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < respins));
     lights();
-    message('GIRLS LOCK IN PLACE');
+    message('BADDIES LOCK IN PLACE');
     await sleep(700);
 
     while (respins > 0 && locked < 15) {
@@ -512,7 +534,7 @@
         if (!orb) return;
         c.orb = orb; gotNew = true;
         Sound.coinHit(locked, !!orb.jp); locked++;
-        message(`${locked} GIRLS`);
+        message(`${locked} BADDIES`);
       })));
       if (gotNew && locked < 15) {
         respins = 3; lights(); Sound.respinReset();
@@ -712,8 +734,8 @@
     $('ptGrid').innerHTML = Object.keys(PAYS).map((s) =>
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-${s}"/></svg><div class="pt-pays">` +
       PAYS[s].map((p, i) => `<b>${i + 3}×</b> ${fmt(p * bet())}`).join('<br>') + '</div></div>').join('') +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except girls and free spins</div></div>` +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>GIRLS</b><br>6+ start Hold &amp; Spin. Fill all 15 for the GRAND</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except baddies and free spins</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>BADDIES</b><br>6+ start Hold &amp; Spin. Fill all 15 for the GRAND</div></div>` +
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-scatter"/></svg><div class="pt-pays"><b>FREE SPINS</b><br>3 on reels 1, 3, 5 = ${FS_COUNT} free spins, wins x${FS_MULT}</div></div>`;
   }
 
@@ -729,7 +751,6 @@
     $('btnTurbo').addEventListener('click', () => { Sound.init(); Sound.click(); S.turbo = !S.turbo; updateUI(); });
     $('btnAuto').addEventListener('click', () => { Sound.init(); Sound.click(); S.auto = !S.auto; updateUI(); if (S.auto && !S.busy) spin(); });
     $('btnSound').addEventListener('click', () => { Sound.init(); Sound.setEnabled(!Sound.enabled); Sound.click(); updateUI(); });
-    $('btnInfo').addEventListener('click', () => { Sound.init(); Sound.click(); buildPaytable(); $('paytable').hidden = false; });
     $('ptClose').addEventListener('click', () => { Sound.click(); $('paytable').hidden = true; });
     $('btnGamble').addEventListener('click', () => { Sound.init(); gambleOpen(); });
     document.querySelectorAll('.g-pick').forEach((b) => {
