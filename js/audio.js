@@ -9,11 +9,16 @@ const Sound = (() => {
   const custom = {};
   const CUSTOM_NAMES = [
     'click', 'spin_start', 'reel_stop', 'coin_hit', 'anticipation', 'win_small',
-    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare', 'char_show', 'chest_open'
+    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare', 'char_show', 'chest_open',
+    'background_music'
   ];
+  const BGM_VOL = 0.32, BGM_DUCK = 0.05;
+  let bgm = null, bgmGain = null, bgmDucked = false;
 
   // Major pentatonic (gong scale) - every coin climbs one step.
   const PENT = [0, 2, 4, 7, 9];
+  // Semitone steps for pitching a recorded coin sound up a rising scale (kept within ~1.5 octaves).
+  const PENT_STEPS = [0, 2, 4, 7, 9, 12, 14, 16];
   const noteFreq = (base, step) => base * Math.pow(2, (12 * Math.floor(step / 5) + PENT[((step % 5) + 5) % 5]) / 12);
   const NOTES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
   const nf = (n) => { const m = /^([A-G])(#?)(\d)$/.exec(n); return 440 * Math.pow(2, (NOTES[m[1]] + (m[2] ? 1 : 0) + (m[3] - 4) * 12 - 9) / 12); };
@@ -230,6 +235,16 @@ const Sound = (() => {
         if (r.ok) { custom[name] = await ctx.decodeAudioData(await r.arrayBuffer()); console.info('[sound] custom', name, '->', map[name]); }
       } catch (e) { console.warn('[sound] could not load', map[name], e); }
     }
+    startMusic();
+  }
+
+  // Looping background music (custom 'background_music' only). Fades in, ducks under win screens.
+  function startMusic() {
+    if (bgm || !custom.background_music || !ctx) return;
+    bgmGain = ctx.createGain(); bgmGain.gain.value = 0; bgmGain.connect(master);
+    bgm = ctx.createBufferSource(); bgm.buffer = custom.background_music; bgm.loop = true;
+    bgm.connect(bgmGain); bgm.start();
+    bgmGain.gain.setTargetAtTime(bgmDucked ? BGM_DUCK : BGM_VOL, ctx.currentTime, 0.6);
   }
 
   const playing = new Set();
@@ -250,6 +265,11 @@ const Sound = (() => {
   const api = {
     init,
     get enabled() { return enabled; },
+    // Lower the background music while a win screen or reveal is showing.
+    duckMusic(on) {
+      bgmDucked = !!on;
+      if (bgmGain) bgmGain.gain.setTargetAtTime(on ? BGM_DUCK : BGM_VOL, ctx.currentTime, on ? 0.15 : 0.8);
+    },
     setEnabled(v) {
       enabled = v;
       if (master) master.gain.setTargetAtTime(v ? 0.85 : 0, ctx.currentTime, 0.02);
@@ -288,7 +308,7 @@ const Sound = (() => {
     // so a run of hits plays as a rising melody.
     coinHit(n = 0, heavy = false) {
       if (!ready()) return;
-      if (playCustom('coin_hit', { rate: Math.pow(2, (12 * Math.floor(n / 5) + PENT[n % 5]) / 12) })) return;
+      if (playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[n % 8] / 12), vol: heavy ? 1 : 0.85 })) return;
       const t = now();
       const f = noteFreq(523.25, n);
       bell(f, t, 0.32, 1.6);
@@ -439,7 +459,7 @@ const Sound = (() => {
 
     collect(n = 0) { // tallying pearls at the end of the feature, rising
       if (!ready()) return;
-      if (playCustom('coin_hit', { rate: Math.pow(2, (12 * Math.floor(n / 5) + PENT[n % 5]) / 12), vol: 0.8 })) return;
+      if (playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[n % 8] / 12), vol: 0.75 })) return;
       const t = now();
       bell(noteFreq(659.25, n), t, 0.26, 1.0);
       clink(t, 0.18);

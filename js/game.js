@@ -329,6 +329,7 @@
       ov.hidden = false;
       void stage.offsetWidth;
       stage.classList.add('drop');
+      Sound.duckMusic(true);
       Sound.chestShake();
 
       const fast = S.turbo ? 0.6 : 1;
@@ -360,7 +361,7 @@
         if (closed) return; closed = true;
         timers.forEach(clearTimeout); clearTimeout(autoT);
         ov.removeEventListener('click', onClick);
-        Sound.stopFanfare(); coinRain.clear(); ov.hidden = true;
+        Sound.stopFanfare(); Sound.duckMusic(false); coinRain.clear(); ov.hidden = true;
         stage.className = 'chest-stage';
         message(opts.perfume ? 'ENJOY!' : title + ' ' + fmt(total), true);
         res();
@@ -712,6 +713,7 @@
 
   async function reveal(lost, earned) {
     S.revealPending = false; S.busy = true; S.auto = false; updateUI();
+    Sound.duckMusic(true);
     await sleep(500);
     if (lost) {
       await say('BUT WAIT...', 1600, true);
