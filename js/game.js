@@ -15,7 +15,7 @@
   const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
-  const RIG_SPIN = 15;               // this paid spin always lands Hold & Spin and fills all 15 (see reveal())
+  const RIG_SPIN = 12;               // this paid spin always lands Hold & Spin and fills all 15 (see reveal())
   const GAMBLE_MAX = 5;
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
@@ -580,50 +580,72 @@
   }
 
   // ---------- Gamble ----------
-  // After a win: risk it on the next card. Colour pays x2, suit pays x4. Up to GAMBLE_MAX goes.
+  // Pick the next card: colour pays x2, suit pays x4. Half gamble banks half the win and risks the rest.
   const SUITS = [{ s: '\u2665', c: 'red' }, { s: '\u2666', c: 'red' }, { s: '\u2663', c: 'black' }, { s: '\u2660', c: 'black' }];
   const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-  const GB = { amt: 0, rounds: 0, busy: false, hist: [] };
+  const GB = { amt: 0, banked: 0, rounds: 0, busy: false, half: false, hover: 'colour', hist: [] };
+  const cents = (v) => Math.round(v * 100) / 100;
+  const credits = (v) => Math.round(v * 100).toLocaleString('en-AU');
+  const dual = (v) => `${credits(v)}<small>${fmt(v)}</small>`;
+  const halfBank = () => Math.floor(GB.amt * 100 / 2) / 100;
+  const stake = () => (GB.half ? cents(GB.amt - halfBank()) : GB.amt);
+
   function gambleOpen(prompt) {
     if (S.busy || S.auto || !(S.lastWin > 0)) return;
     Sound.click();
-    GB.amt = S.lastWin; GB.rounds = 0; GB.busy = false;
+    Object.assign(GB, { amt: S.lastWin, banked: 0, rounds: 0, busy: false, half: false, hover: 'colour' });
     S.credit -= GB.amt; S.lastWin = 0; S.busy = true; updateUI();
     $('gCard').classList.remove('flip', 'won', 'lost');
     $('gamble').hidden = false;
-    gambleUI(prompt || 'PICK A COLOUR (x2) OR A SUIT (x4)');
+    gambleUI(prompt || 'PICK RED OR BLACK (x2), OR A SUIT (x4)');
   }
   function gambleUI(msg) {
-    $('gAmt').textContent = fmt(GB.amt); $('gColor').textContent = fmt(GB.amt * 2); $('gSuit').textContent = fmt(GB.amt * 4);
+    const st = stake(), suit = GB.hover === 'suit', kind = suit ? 'Suit' : 'Colour';
+    $('gmCredit').innerHTML = dual(S.credit);
+    $('gmBet').innerHTML = dual(bet());
+    $('gmWin').innerHTML = dual(GB.amt);
+    $('gLeftLbl').innerHTML = `${kind} Gamble<br>Gamble Amount`;
+    $('gRightLbl').innerHTML = `${kind} Gamble<br>to win`;
+    $('gAmt').innerHTML = dual(st);
+    $('gToWin').innerHTML = dual(st * (suit ? 4 : 2));
+    $('gMode').textContent = GB.half ? 'Half Gamble Selected' : 'Full Gamble Selected';
+    $('gMode').classList.toggle('half', GB.half);
+    $('gNote').textContent = GB.half ? 'Press HALF for Full Gamble' : 'Press HALF for Half Gamble';
     $('gLeft').textContent = GAMBLE_MAX - GB.rounds;
     if (msg != null) $('gMsg').textContent = msg;
-    document.querySelectorAll('.g-pick').forEach((b) => { b.disabled = GB.busy || GB.amt <= 0 || GB.rounds >= GAMBLE_MAX; });
+    const off = GB.busy || GB.amt <= 0 || GB.rounds >= GAMBLE_MAX;
+    document.querySelectorAll('.g-pick').forEach((b) => { b.disabled = off; });
+    $('gMode').disabled = off || GB.amt < 0.02;
     $('gCollect').disabled = GB.busy;
     $('gHist').innerHTML = GB.hist.map((h) => `<span class="${h.c}">${h.s}</span>`).join('');
   }
   async function gamblePick(pick) {
     if (GB.busy || GB.amt <= 0) return;
-    GB.busy = true; gambleUI('');
+    GB.busy = true;
+    const isSuit = pick.length === 1;
+    GB.hover = isSuit ? 'suit' : 'colour';
+    if (GB.half) { const bank = halfBank(); GB.banked = cents(GB.banked + bank); S.credit += bank; GB.amt = cents(GB.amt - bank); }
+    const st = GB.amt;
+    gambleUI('');
     const card = SUITS[(Math.random() * 4) | 0], rank = RANKS[(Math.random() * 13) | 0];
     const face = $('gFace');
     face.className = 'g-face ' + card.c;
-    face.innerHTML = `<span class="g-rank">${rank}</span><span class="g-big">${card.s}</span><span class="g-rank b">${rank}</span>`;
+    face.innerHTML = `<span class="g-rank">${rank}<i>${card.s}</i></span><span class="g-big">${card.s}</span><span class="g-rank b">${rank}<i>${card.s}</i></span>`;
     const cardEl = $('gCard');
     cardEl.classList.remove('flip', 'won', 'lost'); void cardEl.offsetWidth;
     Sound.cardFlip(); cardEl.classList.add('flip');
     await sleep(700);
-    GB.hist.unshift(card); GB.hist = GB.hist.slice(0, 6);
-    const isSuit = pick.length === 1;
+    GB.hist.unshift(card); GB.hist = GB.hist.slice(0, 8);
     const won = isSuit ? pick === card.s : pick === card.c;
     GB.rounds++;
     if (won) {
-      GB.amt *= isSuit ? 4 : 2;
+      GB.amt = cents(st * (isSuit ? 4 : 2));
       cardEl.classList.add('won'); Sound.winSmall(isSuit ? 8 : 3);
-      gambleUI(GB.rounds >= GAMBLE_MAX ? `WIN! ${fmt(GB.amt)} - LIMIT REACHED` : `WIN! ${fmt(GB.amt)} - GO AGAIN OR COLLECT`);
+      gambleUI(GB.rounds >= GAMBLE_MAX ? `WIN ${fmt(GB.amt)} - GAMBLE LIMIT REACHED` : `WIN ${fmt(GB.amt)} - GAMBLE AGAIN OR TAKE WIN`);
     } else {
       GB.amt = 0;
       cardEl.classList.add('lost'); Sound.gambleLose();
-      gambleUI('NO LUCK THIS TIME');
+      gambleUI(GB.banked > 0 ? `NO LUCK - ${fmt(GB.banked)} WAS BANKED` : 'NO LUCK THIS TIME');
     }
     await sleep(1100);
     GB.busy = false;
@@ -634,12 +656,12 @@
   function gambleClose() {
     if (GB.busy) return;
     $('gamble').hidden = true;
-    const amt = GB.amt;
-    S.credit += amt; setWin(amt);
-    message(amt > 0 ? 'GAMBLE COLLECTED ' + fmt(amt) : 'GAMBLE LOST', amt > 0);
-    if (amt > 0) Sound.coinHit(6);
+    const amt = GB.amt, total = cents(amt + GB.banked);
+    S.credit += amt; setWin(total);
+    message(total > 0 ? 'GAMBLE COLLECTED ' + fmt(total) : 'GAMBLE LOST', total > 0);
+    if (total > 0) Sound.coinHit(6);
     GB.amt = 0; S.busy = false; updateUI();
-    if (S.revealPending) reveal(amt <= 0, amt);
+    if (S.revealPending) reveal(amt <= 0, total);
   }
 
   // ---------- The surprise ----------
@@ -681,7 +703,7 @@
       await d; S.credit = Math.max(0, S.credit - earned);
     }
     setWin(0); updateUI();
-    await bigWin(0, 'MYRRHE 55', 0, { perfume: true });
+    await bigWin(0, 'LE LABO PERFUME', 0, { perfume: true });
     S.busy = false; updateUI();
   }
 
@@ -710,7 +732,12 @@
     $('btnInfo').addEventListener('click', () => { Sound.init(); Sound.click(); buildPaytable(); $('paytable').hidden = false; });
     $('ptClose').addEventListener('click', () => { Sound.click(); $('paytable').hidden = true; });
     $('btnGamble').addEventListener('click', () => { Sound.init(); gambleOpen(); });
-    document.querySelectorAll('.g-pick').forEach((b) => b.addEventListener('click', () => gamblePick(b.dataset.pick)));
+    document.querySelectorAll('.g-pick').forEach((b) => {
+      b.addEventListener('click', () => gamblePick(b.dataset.pick));
+      const hov = () => { if (GB.busy) return; GB.hover = b.classList.contains('suit') ? 'suit' : 'colour'; gambleUI(null); };
+      b.addEventListener('mouseenter', hov); b.addEventListener('focus', hov);
+    });
+    $('gMode').addEventListener('click', () => { if (GB.busy) return; Sound.click(); GB.half = !GB.half; gambleUI(null); });
     $('gCollect').addEventListener('click', () => { Sound.click(); gambleClose(); });
     $('credit').parentElement.addEventListener('click', () => {
       if (S.credit < BETS[0] && !S.busy) { S.credit = START_CREDIT; Sound.init(); Sound.coinHit(4); message('CREDIT REFILLED (PLAY MONEY)'); updateUI(); }

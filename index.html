@@ -228,29 +228,44 @@
 </div>
 
 <div class="overlay gamble" id="gamble" hidden>
-  <div class="gamble-inner">
-    <div class="g-title">GAMBLE</div>
-    <div class="g-amounts">
-      <div><span>AT STAKE</span><b id="gAmt">$0.00</b></div>
-      <div><span>COLOUR WIN</span><b id="gColor">$0.00</b></div>
-      <div><span>SUIT WIN</span><b id="gSuit">$0.00</b></div>
+  <div class="g-screen">
+    <i class="g-cracker l"></i><i class="g-cracker r"></i>
+    <div class="g-top">
+      <div class="g-meter"><span>CREDIT</span><b id="gmCredit"></b></div>
+      <div class="g-meter"><span>BET</span><b id="gmBet"></b></div>
+      <div class="g-meter"><span>WIN</span><b id="gmWin"></b></div>
     </div>
-    <div class="g-table">
+    <div class="g-note"><span>$1 = 100 Credits</span><span id="gNote">Press HALF for Half Gamble</span></div>
+    <div class="g-bars">
+      <button class="g-mode" id="gMode">Full Gamble Selected</button>
+      <div class="g-history"><span>HISTORY</span><div class="g-hist" id="gHist"></div></div>
+    </div>
+    <div class="g-mid">
+      <div class="g-col"><div class="g-lbl" id="gLeftLbl">Colour Gamble<br>Gamble Amount</div><b class="g-num" id="gAmt"></b></div>
       <div class="g-card" id="gCard"><div class="g-inner"><div class="g-back"></div><div class="g-face" id="gFace"></div></div></div>
-      <div class="g-side"><span class="g-label">HISTORY</span><div class="g-hist" id="gHist"></div><span class="g-label">GAMBLES LEFT <b id="gLeft">5</b></span></div>
+      <div class="g-col"><div class="g-lbl" id="gRightLbl">Colour Gamble<br>to win</div><b class="g-num" id="gToWin"></b></div>
+    </div>
+    <div class="g-choices">
+      <div class="g-side">
+        <button class="g-pick colour red" data-pick="red">RED</button>
+        <div class="g-suits">
+          <button class="g-pick suit red" data-pick="&#9829;" aria-label="Hearts">&#9829;</button>
+          <button class="g-pick suit red" data-pick="&#9830;" aria-label="Diamonds">&#9830;</button>
+        </div>
+      </div>
+      <div class="g-side">
+        <button class="g-pick colour black" data-pick="black">BLACK</button>
+        <div class="g-suits">
+          <button class="g-pick suit black" data-pick="&#9827;" aria-label="Clubs">&#9827;</button>
+          <button class="g-pick suit black" data-pick="&#9824;" aria-label="Spades">&#9824;</button>
+        </div>
+      </div>
     </div>
     <div class="g-msg" id="gMsg"></div>
-    <div class="g-row">
-      <button class="g-pick colour red" data-pick="red">RED<small>x2</small></button>
-      <button class="g-pick colour black" data-pick="black">BLACK<small>x2</small></button>
+    <div class="g-bottom">
+      <span class="g-left">GAMBLES LEFT <b id="gLeft">5</b></span>
+      <button class="g-take" id="gCollect">TAKE WIN</button>
     </div>
-    <div class="g-row">
-      <button class="g-pick suit red" data-pick="&#9829;">&#9829;<small>x4</small></button>
-      <button class="g-pick suit red" data-pick="&#9830;">&#9830;<small>x4</small></button>
-      <button class="g-pick suit black" data-pick="&#9827;">&#9827;<small>x4</small></button>
-      <button class="g-pick suit black" data-pick="&#9824;">&#9824;<small>x4</small></button>
-    </div>
-    <button class="btn-pill gold" id="gCollect">COLLECT</button>
   </div>
 </div>
 
