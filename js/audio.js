@@ -257,6 +257,16 @@ const Sound = (() => {
     return s;
   }
 
+  // The recorded ring is loud and distinctive, so only let it through now and then:
+  // with the given chance, and never within 0.7 s of the last one. Other hits use the synth chime.
+  let lastRing = -1;
+  function sparseRing(chance) {
+    if (!custom.coin_hit || Math.random() >= chance) return false;
+    if (ctx.currentTime - lastRing < 0.7) return false;
+    lastRing = ctx.currentTime;
+    return true;
+  }
+
   const ready = () => ctx && enabled;
   const now = () => ctx.currentTime + 0.01;
   let lastTick = 0;
@@ -308,7 +318,7 @@ const Sound = (() => {
     // so a run of hits plays as a rising melody.
     coinHit(n = 0, heavy = false) {
       if (!ready()) return;
-      if (playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[n % 8] / 12), vol: heavy ? 1 : 0.85 })) return;
+      if (sparseRing(heavy ? 1 : 0.35) && playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[n % 8] / 12), vol: heavy ? 1 : 0.85 })) return;
       const t = now();
       const f = noteFreq(523.25, n);
       bell(f, t, 0.32, 1.6);
@@ -459,7 +469,7 @@ const Sound = (() => {
 
     collect(n = 0) { // tallying pearls at the end of the feature, rising
       if (!ready()) return;
-      if (playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[n % 8] / 12), vol: 0.75 })) return;
+      if (n % 4 === 0 && sparseRing(1) && playCustom('coin_hit', { rate: Math.pow(2, PENT_STEPS[(n / 4) % 8] / 12), vol: 0.75 })) return;
       const t = now();
       bell(noteFreq(659.25, n), t, 0.26, 1.0);
       clink(t, 0.18);
