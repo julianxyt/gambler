@@ -9,7 +9,7 @@ const Sound = (() => {
   const custom = {};
   const CUSTOM_NAMES = [
     'click', 'spin_start', 'reel_stop', 'coin_hit', 'anticipation', 'win_small',
-    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare', 'char_show'
+    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare', 'char_show', 'chest_open'
   ];
 
   // Major pentatonic (gong scale) - every coin climbs one step.
@@ -331,6 +331,27 @@ const Sound = (() => {
       for (let i = 0; i < 5 + k; i++) bell(noteFreq(880, i), t + 0.2 + i * 0.075, 0.11, 1.0);
       for (let i = 0; i < 10; i++) tone('sine', 2400 + Math.random() * 3000, t + 0.35 + Math.random() * 1.1, 0.002, 0.12, 0.04, out(1, 0.5));
       if (k >= 5) gong(t + 0.14, 70, 0.5, master, 2.5);
+    },
+
+    // Chest rattling before it opens.
+    chestShake() {
+      if (!ready()) return;
+      const t = now();
+      taiko(t, 0.6, 50);
+      for (let i = 0; i < 9; i++) woodblock(t + 0.65 + i * 0.065, 300 + (i % 2) * 90, 0.16);
+      noiseHit(t + 0.65, 0.01, 0.6, 0.12, out(0.6, 0.1), 'bandpass', 900, 2);
+    },
+
+    // Lid bursts open: thump, creak, bright coin spray and a shimmer.
+    chestOpen(tier = 0) {
+      if (!ready() || playCustom('chest_open')) return;
+      const t = now();
+      taiko(t, 1, 46);
+      whoosh(t, 0.5, 300, 3800, 0.3);
+      tone('sawtooth', 140, t, 0.01, 0.25, 0.06, out(0.5, 0.2), 90);
+      for (let i = 0; i < 14; i++) clink(t + 0.05 + Math.random() * 0.6, 0.1);
+      for (let i = 0; i < 8; i++) bell(noteFreq(784, i), t + 0.08 + i * 0.06, 0.1, 1.2);
+      if (tier) { gong(t, 66, 0.55, master, 3); cymbal(t, 0.25, 2); }
     },
 
     // Small sparkle when character symbols light up on a win.

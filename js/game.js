@@ -3,12 +3,15 @@
 
   // ---------- Config ----------
   // Pays are multiples of the total bet, per way (243 ways).
+  // Tuned with a simulation for roughly one paying spin in ten (scratchpad sim: hit 1 in 10.0).
   const PAYS = {
-    kgirl: [0.3, 1, 4], abg: [0.2, 0.6, 2], pomw: [0.16, 0.4, 1.5], pomb: [0.12, 0.3, 1],
-    A: [0.08, 0.2, 0.6], K: [0.06, 0.15, 0.5], Q: [0.06, 0.15, 0.5], J: [0.04, 0.1, 0.4], T: [0.04, 0.1, 0.4],
+    kgirl: [3, 10, 40], abg: [2, 6, 20], pomw: [1.6, 4, 15], pomb: [1.2, 3, 10],
+    seven: [1, 3, 8], diamond: [1, 2.5, 7], star: [0.8, 2, 6], bar: [0.8, 2, 6],
+    melon: [0.6, 1.5, 5], grapes: [0.6, 1.5, 5], cherry: [0.5, 1.2, 4],
+    A: [0.5, 1.2, 4], K: [0.4, 1, 3], Q: [0.4, 1, 3], J: [0.3, 0.8, 2.5],
   };
-  const NAMES = { kgirl: 'Korean Girl & Brown Pom', abg: 'ABG & Brown Pom', pomw: 'Korean Girl & White Pom', pomb: 'ABG & White Pom', A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10' };
-  const WEIGHTS = { kgirl: 3, abg: 4, pomw: 5, pomb: 6, A: 8, K: 9, Q: 9, J: 10, T: 10, wild: 2, orb: 12 };
+  const NAMES = { kgirl: 'Korean Girl & Brown Pom', abg: 'ABG & Brown Pom', pomw: 'Korean Girl & White Pom', pomb: 'ABG & White Pom', seven: '7', diamond: 'Diamond', star: 'Star', bar: 'BAR', melon: 'Watermelon', grapes: 'Grapes', cherry: 'Cherry', A: 'A', K: 'K', Q: 'Q', J: 'J' };
+  const WEIGHTS = { kgirl: 3, abg: 4, pomw: 5, pomb: 6, seven: 6, diamond: 7, star: 7, bar: 8, melon: 8, grapes: 8, cherry: 9, A: 9, K: 9, Q: 10, J: 10, wild: 2, orb: 20 };
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
   const ORB_MULTS = [[1, 20], [2, 18], [3, 14], [4, 10], [5, 9], [8, 6], [10, 4], [15, 2], [20, 1]];
@@ -246,13 +249,8 @@
 
   async function payWin(total, title) {
     const ratio = total / bet();
-    if (title || ratio >= 15) {
-      await bigWin(total, title || (ratio >= 100 ? 'EPIC WIN' : ratio >= 40 ? 'MEGA WIN' : 'BIG WIN'), ratio);
-    } else {
-      Sound.winSmall(ratio);
-      message('WIN ' + fmt(total), true);
-      await rollup($('win'), 0, total, Math.min(2200, 350 + ratio * 250));
-    }
+    title = title || (ratio >= 100 ? 'EPIC WIN' : ratio >= 40 ? 'MEGA WIN' : ratio >= 15 ? 'BIG WIN' : ratio >= 5 ? 'GREAT WIN' : 'WIN');
+    await bigWin(total, title, ratio);
     S.credit += total; setWin(total); updateUI();
   }
 
@@ -291,30 +289,73 @@
     };
   })();
 
+  // Chest win screen: the chest drops in, rattles, bursts open, and the prize rises out of it,
+  // growing slowly while it counts up. Then it breathes (gentle zoom in/out) until tapped.
+  // Tap during the rise to skip to the end; tap while breathing to collect.
+  function chestCoins(n) {
+    const box = $('chestCoins');
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('i');
+      const ang = (-90 + (Math.random() - 0.5) * 110) * Math.PI / 180, dist = 120 + Math.random() * 220;
+      c.style.setProperty('--x', (Math.cos(ang) * dist).toFixed(0) + 'px');
+      c.style.setProperty('--y', (Math.sin(ang) * dist).toFixed(0) + 'px');
+      c.style.setProperty('--r', ((Math.random() - 0.5) * 900).toFixed(0) + 'deg');
+      c.style.animationDelay = (Math.random() * 0.25).toFixed(2) + 's';
+      box.appendChild(c);
+      setTimeout(() => c.remove(), 1800);
+    }
+  }
   function bigWin(total, title, ratio) {
     return new Promise((res) => {
-      const ov = $('bigwin');
-      const tier = ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1;
+      const ov = $('bigwin'), stage = $('chestStage'), amt = $('bigwinAmount');
+      const tier = title.includes('HOLD') || title.includes('GRAND') ? Math.max(1, ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1)
+        : ratio >= 100 ? 3 : ratio >= 40 ? 2 : ratio >= 15 ? 1 : 0;
       $('bigwinTitle').textContent = title;
-      $('bigwinAmount').textContent = fmt(0);
-      ov.classList.remove('done'); ov.hidden = false;
-      coinRain.start(tier);
-      const fanfareLen = Sound.bigWinFanfare(tier);
-      let finished = false, closed = false;
-      const rollMs = Math.max(2500, (fanfareLen - 1.8) * 1000);
-      rollup($('bigwinAmount'), 0, total, rollMs).then(() => {
-        finished = true; ov.classList.add('done'); coinRain.stop();
-        if (S.auto) setTimeout(close, 2500);
-      });
+      amt.textContent = fmt(0);
+      $('chestCoins').innerHTML = '';
+      stage.className = 'chest-stage t' + tier;
+      ov.hidden = false;
+      void stage.offsetWidth;
+      stage.classList.add('drop');
+      Sound.chestShake();
+
+      const fast = S.turbo ? 0.6 : 1;
+      const riseMs = (tier ? 3000 : 2200) * fast;
+      let phase = 'intro', closed = false, autoT = 0;
+      const timers = [];
+      const later = (ms, f) => timers.push(setTimeout(f, ms * fast));
+
+      later(650, () => stage.classList.add('shake'));
+      later(1250, () => open());
+      function open() {
+        if (phase !== 'intro') return;
+        phase = 'rise';
+        stage.classList.remove('shake'); stage.classList.add('open', 'rise');
+        Sound.chestOpen(tier);
+        chestCoins(tier ? 26 : 14);
+        if (tier) { coinRain.start(tier); Sound.bigWinFanfare(tier); } else Sound.winSmall(ratio);
+        rollup(amt, 0, total, riseMs).then(breathe);
+      }
+      function breathe() {
+        if (phase === 'breathe' || closed) return;
+        phase = 'breathe';
+        amt.textContent = fmt(total);
+        stage.classList.add('breathe');
+        coinRain.stop();
+        if (S.auto) autoT = setTimeout(close, 2500);
+      }
       function close() {
         if (closed) return; closed = true;
+        timers.forEach(clearTimeout); clearTimeout(autoT);
         ov.removeEventListener('click', onClick);
         Sound.stopFanfare(); coinRain.clear(); ov.hidden = true;
+        stage.className = 'chest-stage';
         message(title + ' ' + fmt(total), true);
         res();
       }
       function onClick() {
-        if (!finished) { const el = $('bigwinAmount'); if (el._skip) el._skip(); return; }
+        if (phase === 'intro') { timers.forEach(clearTimeout); open(); return; }
+        if (phase === 'rise') { if (amt._skip) amt._skip(); stage.classList.add('skip'); breathe(); return; }
         close();
       }
       ov.addEventListener('click', onClick);
@@ -516,5 +557,5 @@
   updateUI();
   // Debug hook for testing: window.__fp.forceFeature()
   // window.__fp.forceChar('abg', 5) makes the next spin land that character on the first k reels.
-  window.__fp = { S, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'T' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
+  window.__fp = { S, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'K' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
 })();
