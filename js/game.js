@@ -112,7 +112,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? '?????' : fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -563,7 +563,7 @@
     }
     if (locked >= 15) {
       Sound.jackpot(); flashJackpot('GRAND');
-      await banner('GRAND JACKPOT', fmt(JP.GRAND * bet()), 2400);
+      await banner('GRAND JACKPOT', '?????', 2400);
       total += JP.GRAND * bet();
     }
     if (S.rig) { S.rig = false; S.rigDone = true; S.revealPending = true; }
