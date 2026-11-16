@@ -670,3 +670,11 @@ button:disabled { cursor: default; filter: grayscale(.7) brightness(.6); }
 }
 .tm-text.big { font-size: clamp(44px, 10vw, 100px); animation: titleBeat 1.4s ease-in-out infinite; }
 .tm-hint { position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); font-weight: 800; letter-spacing: 3px; color: #d8c0ff; opacity: .6; font-size: 12px; white-space: nowrap; }
+
+/* ---------- Hold & Spin: symbols streaking through empty spots ---------- */
+.cell.cell-spin { overflow: hidden; }
+.cell-fly {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  filter: blur(1.6px) brightness(1.1); will-change: transform;
+}
+.cell-fly .sym { animation: none; }

@@ -531,7 +531,9 @@
       // Rigged run: one or two girls land on every respin, so the grid always fills.
       const picks = S.rig ? new Set(shuffle(empties.slice()).slice(0, Math.min(empties.length, Math.random() < 0.45 ? 2 : 1))) : null;
       let gotNew = false;
-      await Promise.all(empties.map((c, i) => spinCell(c, 450 + i * (S.turbo ? 45 : 90), picks ? picks.has(c) : undefined).then((orb) => {
+      // Slower than the base game: each empty spot keeps streaking for a while, and they settle one by one.
+      const order = shuffle(empties.slice());
+      await Promise.all(empties.map((c) => spinCell(c, (S.turbo ? 700 : 1500) + order.indexOf(c) * (S.turbo ? 120 : 260), picks ? picks.has(c) : undefined).then((orb) => {
         if (!orb) return;
         c.orb = orb; gotNew = true;
         Sound.coinHit(locked, !!orb.jp); locked++;
@@ -541,7 +543,7 @@
         respins = 3; lights(); Sound.respinReset();
         hud.classList.remove('reset'); void hud.offsetWidth; hud.classList.add('reset');
       }
-      await sleep(600);
+      await sleep(1000);
     }
 
     // Collect
@@ -580,26 +582,50 @@
     el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
   }
 
-  // One empty spot flickers then lands as a girl or stays empty.
-  function spinCell(c, ms, force) {
-    return new Promise((res) => {
-      const holder = reels[c.r].strip.children[c.row + 1];
-      const t0 = performance.now();
-      const hit = force === undefined ? Math.random() < RESPIN_ODDS : force;
-      const land = hit ? makeOrb(true) : null;
-      const iv = setInterval(() => {
-        const fake = Math.random() < 0.45 ? makeOrb(true) : { s: 'empty' };
-        holder.innerHTML = symHTML(fake);
-        holder.firstElementChild.classList.add('flicker');
-        if (performance.now() - t0 >= ms) {
-          clearInterval(iv);
-          holder.innerHTML = symHTML(land || { s: 'empty' });
-          if (land) holder.firstElementChild.classList.add('pop');
-          else Sound.blankLand();
-          res(land);
-        }
-      }, 70);
-    });
+  // One empty spot during Hold & Spin. Every so often symbols streak down through it like a reel
+  // (sometimes one, sometimes a few in a row), then a baddie slides in and settles, or it stays empty.
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const TEASERS = ['A', 'K', 'Q', 'J', 'seven', 'cherry', 'diamond'];
+  function streak(holder, sym, dur, frames) {
+    const f = document.createElement('div');
+    f.className = 'cell-fly'; f.innerHTML = symHTML(sym);
+    holder.appendChild(f);
+    return f.animate(frames || [{ transform: 'translateY(-110%)' }, { transform: 'translateY(110%)' }],
+      { duration: dur, easing: frames ? 'cubic-bezier(.2,.9,.3,1.2)' : 'linear' }).finished.then(() => f);
+  }
+  async function spinCell(c, ms, force) {
+    const holder = reels[c.r].strip.children[c.row + 1];
+    const hit = force === undefined ? Math.random() < RESPIN_ODDS : force;
+    const land = hit ? makeOrb(true) : null;
+    const k = S.turbo ? 0.6 : 1;
+    holder.classList.add('cell-spin');
+    const t0 = performance.now();
+    let passes = 0;
+    while (passes === 0 || performance.now() - t0 < ms) {
+      await wait((90 + Math.random() * 420) * k);                 // sporadic gap
+      const burst = Math.random() < 0.4 ? 2 + ((Math.random() * 3) | 0) : 1; // sometimes a few in a row
+      for (let b = 0; b < burst; b++) {
+        const sym = Math.random() < 0.55 ? makeOrb(true) : { s: TEASERS[(Math.random() * TEASERS.length) | 0] };
+        if (b === 0) Sound.reelTick();
+        (await streak(holder, sym, (110 + Math.random() * 80) * k)).remove();
+      }
+      passes++;
+    }
+    if (land) {
+      // the real one drops in, overshoots a touch and settles
+      const f = await streak(holder, land, 320 * k, [
+        { transform: 'translateY(-110%)', filter: 'blur(2px)' },
+        { transform: 'translateY(6%)', filter: 'blur(0)', offset: 0.75 },
+        { transform: 'translateY(0)', filter: 'blur(0)' },
+      ]);
+      f.remove();
+      holder.innerHTML = symHTML(land);
+      holder.firstElementChild.classList.add('pop');
+    } else {
+      Sound.blankLand();
+    }
+    holder.classList.remove('cell-spin');
+    return land;
   }
 
   // ---------- Gamble ----------
