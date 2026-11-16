@@ -9,7 +9,7 @@ const Sound = (() => {
   const custom = {};
   const CUSTOM_NAMES = [
     'click', 'spin_start', 'reel_stop', 'coin_hit', 'anticipation', 'win_small',
-    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare'
+    'rollup_tick', 'feature_trigger', 'jackpot', 'big_win_fanfare', 'char_show'
   ];
 
   // Major pentatonic (gong scale) - every coin climbs one step.
@@ -318,6 +318,26 @@ const Sound = (() => {
       bell(noteFreq(784, n), t + n * 0.085, 0.18, 1.4);
       clink(t + n * 0.085, 0.14);
       if (ratio >= 5) { taiko(t, 0.6, 55); cymbal(t + n * 0.085, 0.15, 1.2); }
+    },
+
+    // Character showcase: whoosh in, rising sparkle chimes, a taiko hit.
+    charShow(k = 3) {
+      if (!ready() || playCustom('char_show')) return;
+      const t = now();
+      whoosh(t, 0.35, 500, 3400, 0.26);
+      taiko(t + 0.14, 0.7, 60);
+      cymbal(t + 0.14, 0.12, 1.4);
+      for (let i = 0; i < 4; i++) pluck(noteFreq(523.25, i * 2), t + 0.16 + i * 0.11, 0.2);
+      for (let i = 0; i < 5 + k; i++) bell(noteFreq(880, i), t + 0.2 + i * 0.075, 0.11, 1.0);
+      for (let i = 0; i < 10; i++) tone('sine', 2400 + Math.random() * 3000, t + 0.35 + Math.random() * 1.1, 0.002, 0.12, 0.04, out(1, 0.5));
+      if (k >= 5) gong(t + 0.14, 70, 0.5, master, 2.5);
+    },
+
+    // Small sparkle when character symbols light up on a win.
+    sparkle() {
+      if (!ready()) return;
+      const t = now();
+      for (let i = 0; i < 4; i++) bell(noteFreq(1318.5, i * 2), t + i * 0.05, 0.05, 0.6);
     },
 
     rollupTick(i = 0) {

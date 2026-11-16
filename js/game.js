@@ -7,7 +7,7 @@
     kgirl: [0.3, 1, 4], abg: [0.2, 0.6, 2], pomw: [0.16, 0.4, 1.5], pomb: [0.12, 0.3, 1],
     A: [0.08, 0.2, 0.6], K: [0.06, 0.15, 0.5], Q: [0.06, 0.15, 0.5], J: [0.04, 0.1, 0.4], T: [0.04, 0.1, 0.4],
   };
-  const NAMES = { kgirl: 'Korean Girl', abg: 'ABG', pomw: 'White Pom', pomb: 'Brown Pom', A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10' };
+  const NAMES = { kgirl: 'Korean Girl & Brown Pom', abg: 'ABG & Brown Pom', pomw: 'Korean Girl & White Pom', pomb: 'ABG & White Pom', A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10' };
   const WEIGHTS = { kgirl: 3, abg: 4, pomw: 5, pomb: 6, A: 8, K: 9, Q: 9, J: 10, T: 10, wild: 2, orb: 12 };
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
@@ -157,13 +157,77 @@
     return wins;
   }
 
+  // ---------- Character animations ----------
+  const CHARS = ['kgirl', 'abg', 'pomw', 'pomb'];
+  const SHORT = { kgirl: 'CUTIE & BROWN POM', abg: 'BADDIE & BROWN POM', pomw: 'CUTIE & WHITE POM', pomb: 'BADDIE & WHITE POM' };
+  const fxEl = $('fx');
+  let fxTimer = null;
+  const FX_GLYPHS = ['\u2665', '\u2665', '\u2726', '\u2727', '\u2764'];
+  const FX_COLORS = ['#ff5f9e', '#ff8fc0', '#ffe066', '#fff', '#c58cff'];
+  function burstAt(el, n = 6) {
+    const fr = fxEl.getBoundingClientRect(), b = el.getBoundingClientRect();
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('span');
+      p.className = 'fx-p';
+      p.textContent = FX_GLYPHS[(Math.random() * FX_GLYPHS.length) | 0];
+      p.style.left = (b.left - fr.left + b.width * (0.2 + Math.random() * 0.6)) + 'px';
+      p.style.top = (b.top - fr.top + b.height * (0.35 + Math.random() * 0.4)) + 'px';
+      p.style.setProperty('--dx', ((Math.random() - 0.5) * 70).toFixed(0) + 'px');
+      p.style.setProperty('--rot', ((Math.random() - 0.5) * 60).toFixed(0) + 'deg');
+      p.style.animationDelay = (Math.random() * 0.35).toFixed(2) + 's';
+      p.style.color = FX_COLORS[(Math.random() * FX_COLORS.length) | 0];
+      fxEl.appendChild(p);
+      setTimeout(() => p.remove(), 1800);
+    }
+  }
+  function charFx(els) {
+    if (!els.length) return;
+    Sound.sparkle();
+    const go = () => els.forEach((e) => burstAt(e, 4));
+    go(); fxTimer = setInterval(go, 1300);
+  }
+
+  // Full-reel showcase: the portrait zooms out of the reels with rays and a heart burst. Tap to skip.
+  function charShowcase(w) {
+    return new Promise((res) => {
+      const el = $('showcase'), pic = $('scPic');
+      pic.src = `img/icons/${w.sym}.png`;
+      $('scKind').textContent = `${w.k} OF A KIND!`;
+      $('scName').textContent = SHORT[w.sym];
+      el.className = 'showcase k' + w.k; el.hidden = false;
+      Sound.charShow(w.k);
+      const t1 = setTimeout(() => burstAt(pic, 18), 250), t2 = setTimeout(() => burstAt(pic, 14), 950);
+      let done = false, t3 = 0;
+      const end = () => {
+        if (done) return; done = true;
+        clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+        el.classList.add('out');
+        setTimeout(() => { el.hidden = true; el.className = 'showcase'; res(); }, 280);
+      };
+      t3 = setTimeout(end, S.turbo ? 1300 : 2300);
+      el.onclick = end;
+    });
+  }
+  // 4+ of a kind always gets the showcase; a plain 3 of a kind sometimes does.
+  function pickShowcase(wins) {
+    const c = wins.filter((w) => CHARS.includes(w.sym)).sort((a, b) => b.k - a.k || b.amount - a.amount)[0];
+    if (!c) return null;
+    return c.k >= 4 || Math.random() < 0.35 ? c : null;
+  }
+
   function clearWins() {
+    clearInterval(fxTimer); fxTimer = null;
     reelsEl.classList.remove('has-win');
-    reelsEl.querySelectorAll('.sym.win').forEach((e) => e.classList.remove('win'));
+    reelsEl.querySelectorAll('.sym.win').forEach((e) => e.classList.remove('win', 'char'));
   }
   function showWins(wins) {
     reelsEl.classList.add('has-win');
-    wins.forEach((w) => w.cells.forEach(([r, row]) => symEl(r, row).classList.add('win')));
+    const chars = new Set();
+    wins.forEach((w) => w.cells.forEach(([r, row]) => {
+      const e = symEl(r, row); e.classList.add('win');
+      if (CHARS.includes(w.sym) && e.classList.contains('s-' + w.sym)) { e.classList.add('char'); chars.add(e); }
+    }));
+    charFx([...chars]);
   }
 
   function rollup(el, from, to, ms) {
@@ -276,7 +340,7 @@
     message('GOOD FORTUNE...');
     Sound.spinStart();
 
-    const grid = makeGrid();
+    const grid = S.forced || makeGrid(); S.forced = null;
     const base = S.turbo ? 380 : 750, step = S.turbo ? 110 : 210, anticMs = S.turbo ? 900 : 1700;
     const orbsBefore = (r) => grid.slice(0, r).flat().filter((c) => c.s === 'orb').length;
     const antic = [0, 1, 2, 3, 4].map((r) => r >= 3 && orbsBefore(r) >= TRIGGER - 3 + (r - 3));
@@ -301,7 +365,12 @@
 
     const wins = evaluate(grid);
     const total = wins.reduce((a, w) => a + w.amount, 0);
-    if (total > 0) { showWins(wins); await payWin(total); }
+    if (total > 0) {
+      showWins(wins);
+      const sc = pickShowcase(wins);
+      if (sc) { await sleep(450); await charShowcase(sc); }
+      await payWin(total);
+    }
     else message(landed >= 3 ? `${landed} PEARLS - ${TRIGGER} TRIGGER HOLD & SPIN` : 'SPIN AGAIN');
 
     if (landed >= TRIGGER) { await sleep(500); clearWins(); await holdAndSpin(grid); }
@@ -446,5 +515,6 @@
   setWin(0);
   updateUI();
   // Debug hook for testing: window.__fp.forceFeature()
-  window.__fp = { S, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
+  // window.__fp.forceChar('abg', 5) makes the next spin land that character on the first k reels.
+  window.__fp = { S, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'T' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
 })();

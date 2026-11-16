@@ -20,5 +20,6 @@ Any name you leave out keeps the built-in synthesised sound.
 | `feature_trigger` | Hold & Spin starts |
 | `jackpot` | MINI / MINOR / MAJOR / GRAND collected |
 | `big_win_fanfare` | The win screen only. Stops when the screen is closed |
+| `char_show` | Character showcase when a girl & Pom symbol wins big |
 
 Only use audio you have the rights to.

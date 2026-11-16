@@ -32,6 +32,6 @@ To swap in your own audio files, see `sounds/custom/README.md`.
 - `js/audio.js` - sound engine
 - `js/game.js` - reels, wins, Hold & Spin, win screen
 
-## Credits
+## Character art
 
-Character icons in `img/icons/` come from [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT, see `img/icons/LICENSE-fluentui-emoji.txt`). The two Pomeranians are the same dog icon, tinted white or brown in `index.html`.
+`img/icons/` holds the four character symbols (girl + Pomeranian pairs). Winning with one makes it wiggle and throw hearts; 4+ of a kind (and sometimes 3) plays a full-reel showcase.
