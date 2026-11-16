@@ -333,6 +333,31 @@ const Sound = (() => {
       if (k >= 5) gong(t + 0.14, 70, 0.5, master, 2.5);
     },
 
+    // A free-spins scatter landing: bright rising chime, higher for each one.
+    scatterLand(n = 0) {
+      if (!ready()) return;
+      const t = now();
+      bell(noteFreq(659.25, n * 2), t, 0.22, 1.6);
+      bell(noteFreq(659.25, n * 2 + 2), t + 0.07, 0.14, 1.2);
+      whoosh(t, 0.25, 1200, 5000, 0.1);
+      if (n >= 2) gong(t, 80, 0.4, master, 2);
+    },
+
+    // Gamble card flip.
+    cardFlip() {
+      if (!ready()) return;
+      const t = now();
+      whoosh(t, 0.18, 2500, 600, 0.18);
+      woodblock(t + 0.16, 1500, 0.14);
+    },
+
+    gambleLose() {
+      if (!ready()) return;
+      const t = now();
+      tone('triangle', 330, t, 0.01, 0.25, 0.14, out(0.8, 0.2), 220);
+      tone('triangle', 247, t + 0.22, 0.01, 0.45, 0.14, out(0.8, 0.25), 150);
+    },
+
     // Chest rattling before it opens.
     chestShake() {
       if (!ready()) return;

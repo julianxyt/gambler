@@ -3,15 +3,20 @@
 
   // ---------- Config ----------
   // Pays are multiples of the total bet, per way (243 ways).
-  // Tuned with a simulation for roughly one paying spin in ten (scratchpad sim: hit 1 in 10.0).
+  // Tuned with a simulation (scratchpad): about 1 paying spin in 9, Hold & Spin about 1 in 75,
+  // free spins about 1 in 100. The girls are not line symbols: they are the Hold & Spin cash coins.
   const PAYS = {
-    kgirl: [3, 10, 40], abg: [2, 6, 20], pomw: [1.6, 4, 15], pomb: [1.2, 3, 10],
-    seven: [1, 3, 8], diamond: [1, 2.5, 7], star: [0.8, 2, 6], bar: [0.8, 2, 6],
-    melon: [0.6, 1.5, 5], grapes: [0.6, 1.5, 5], cherry: [0.5, 1.2, 4],
+    seven: [2, 6, 20], diamond: [1.6, 4, 15], star: [1.2, 3, 10], bar: [1, 3, 8],
+    melon: [0.8, 2, 6], grapes: [0.8, 2, 6], cherry: [0.6, 1.5, 5],
     A: [0.5, 1.2, 4], K: [0.4, 1, 3], Q: [0.4, 1, 3], J: [0.3, 0.8, 2.5],
   };
-  const NAMES = { kgirl: 'Korean Girl & Brown Pom', abg: 'ABG & Brown Pom', pomw: 'Korean Girl & White Pom', pomb: 'ABG & White Pom', seven: '7', diamond: 'Diamond', star: 'Star', bar: 'BAR', melon: 'Watermelon', grapes: 'Grapes', cherry: 'Cherry', A: 'A', K: 'K', Q: 'Q', J: 'J' };
-  const WEIGHTS = { kgirl: 3, abg: 4, pomw: 5, pomb: 6, seven: 6, diamond: 7, star: 7, bar: 8, melon: 8, grapes: 8, cherry: 9, A: 9, K: 9, Q: 10, J: 10, wild: 2, orb: 20 };
+  const NAMES = { seven: '7', diamond: 'Diamond', star: 'Star', bar: 'BAR', melon: 'Watermelon', grapes: 'Grapes', cherry: 'Cherry', A: 'A', K: 'K', Q: 'Q', J: 'J' };
+  const WEIGHTS = { seven: 6, diamond: 7, star: 7, bar: 8, melon: 8, grapes: 8, cherry: 8, A: 8, K: 8, Q: 8, J: 8, wild: 1, orb: 15, scatter: 6 };
+  const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
+  const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
+  const FS_COUNT = 8, FS_MULT = 2;   // free spins
+  const RIG_SPIN = 15;               // the Hold & Spin that wins the perfume lands on this paid spin
+  const GAMBLE_MAX = 5;
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
   const ORB_MULTS = [[1, 20], [2, 18], [3, 14], [4, 10], [5, 9], [8, 6], [10, 4], [15, 2], [20, 1]];
@@ -22,6 +27,7 @@
   const S = {
     credit: load('fp_credit', START_CREDIT), betIdx: load('fp_bet', 1),
     grid: null, busy: false, auto: false, turbo: load('fp_turbo', false), feature: false,
+    spins: 0, rig: false, perfumeWon: false, fs: null, roundWin: 0, lastWin: 0, forced: null,
   };
   const bet = () => BETS[S.betIdx];
   function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
@@ -37,10 +43,13 @@
     return pairs[pairs.length - 1][0];
   }
   function pickSym(reel) {
-    const pairs = Object.entries(WEIGHTS).filter(([s]) => s !== 'wild' || (reel >= 1 && reel <= 3));
+    const pairs = Object.entries(S.fs ? FS_WEIGHTS : WEIGHTS).filter(([s]) => (s !== 'wild' || (reel >= 1 && reel <= 3)) && (s !== 'scatter' || reel % 2 === 0));
     return weighted(pairs);
   }
-  function makeOrb(inFeature) {
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const girl = () => GIRLS[(Math.random() * GIRLS.length) | 0];
+  function makeOrb(inFeature) { return Object.assign(rollOrb(inFeature), { g: girl() }); }
+  function rollOrb(inFeature) {
     const r = Math.random();
     if (inFeature && r < 0.008) return { s: 'orb', jp: 'MAJOR' };
     if (r < 0.03) return { s: 'orb', jp: 'MINOR' };
@@ -58,7 +67,7 @@
     if (!c || c.s === 'empty') return '<div class="sym empty"></div>';
     if (c.s === 'orb') {
       const label = c.jp || fmt(c.v).replace('.00', '');
-      return `<div class="sym orb"><svg viewBox="0 0 100 100"><use href="#sym-orb"/></svg><span class="orb-val ${c.jp || ''}">${label}</span></div>`;
+      return `<div class="sym orb"><svg viewBox="0 0 100 100"><use href="#sym-${c.g || 'kgirl'}"/></svg><span class="orb-val ${c.jp || ''}">${label}</span></div>`;
     }
     return `<div class="sym s-${c.s}"><svg viewBox="0 0 100 100"><use href="#sym-${c.s}"/></svg></div>`;
   }
@@ -96,7 +105,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? 'PERFUME' : fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -105,6 +114,8 @@
     $('btnSpin').classList.toggle('auto', S.auto);
     $('btnSound').classList.toggle('on', Sound.enabled);
     $('btnSpin').disabled = (S.busy && !S.auto) || S.feature;
+    $('btnGamble').disabled = S.busy || S.auto || !(S.lastWin > 0);
+    $('btnGamble').classList.toggle('ready', !$('btnGamble').disabled);
     save();
   }
   function message(t, big) { const m = $('message'); m.textContent = t; m.classList.toggle('big', !!big); }
@@ -190,16 +201,16 @@
     go(); fxTimer = setInterval(go, 1300);
   }
 
-  // Full-reel showcase: the portrait zooms out of the reels with rays and a heart burst. Tap to skip.
-  function charShowcase(w) {
+  // Full-reel showcase: a portrait zooms out of the reels with rays and a heart burst. Tap to skip.
+  function charShowcase({ pic, line1, line2, big }) {
     return new Promise((res) => {
-      const el = $('showcase'), pic = $('scPic');
-      pic.src = `img/icons/${w.sym}.png`;
-      $('scKind').textContent = `${w.k} OF A KIND!`;
-      $('scName').textContent = SHORT[w.sym];
-      el.className = 'showcase k' + w.k; el.hidden = false;
-      Sound.charShow(w.k);
-      const t1 = setTimeout(() => burstAt(pic, 18), 250), t2 = setTimeout(() => burstAt(pic, 14), 950);
+      const el = $('showcase'), img = $('scPic');
+      img.src = `img/icons/${pic}.png`;
+      $('scKind').textContent = line1;
+      $('scName').textContent = line2;
+      el.className = 'showcase' + (big ? ' k5' : ''); el.hidden = false;
+      Sound.charShow(big ? 5 : 3);
+      const t1 = setTimeout(() => burstAt(img, 18), 250), t2 = setTimeout(() => burstAt(img, 14), 950);
       let done = false, t3 = 0;
       const end = () => {
         if (done) return; done = true;
@@ -210,12 +221,6 @@
       t3 = setTimeout(end, S.turbo ? 1300 : 2300);
       el.onclick = end;
     });
-  }
-  // 4+ of a kind always gets the showcase; a plain 3 of a kind sometimes does.
-  function pickShowcase(wins) {
-    const c = wins.filter((w) => CHARS.includes(w.sym)).sort((a, b) => b.k - a.k || b.amount - a.amount)[0];
-    if (!c) return null;
-    return c.k >= 4 || Math.random() < 0.35 ? c : null;
   }
 
   function clearWins() {
@@ -247,11 +252,11 @@
     });
   }
 
-  async function payWin(total, title) {
+  async function payWin(total, title, opts = {}) {
     const ratio = total / bet();
     title = title || (ratio >= 100 ? 'EPIC WIN' : ratio >= 40 ? 'MEGA WIN' : ratio >= 15 ? 'BIG WIN' : ratio >= 5 ? 'GREAT WIN' : 'WIN');
-    await bigWin(total, title, ratio);
-    S.credit += total; setWin(total); updateUI();
+    await bigWin(total, title, ratio, opts);
+    S.credit += total; S.roundWin += total; setWin(S.roundWin); updateUI();
   }
 
   // ---------- Win screen (the only place the fanfare plays) ----------
@@ -305,22 +310,22 @@
       setTimeout(() => c.remove(), 1800);
     }
   }
-  function bigWin(total, title, ratio) {
+  function bigWin(total, title, ratio, opts = {}) {
     return new Promise((res) => {
       const ov = $('bigwin'), stage = $('chestStage'), amt = $('bigwinAmount');
-      const tier = title.includes('HOLD') || title.includes('GRAND') ? Math.max(1, ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1)
+      const tier = opts.perfume ? 3 : /HOLD|FREE/.test(title) ? Math.max(1, ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1)
         : ratio >= 100 ? 3 : ratio >= 40 ? 2 : ratio >= 15 ? 1 : 0;
       $('bigwinTitle').textContent = title;
       amt.textContent = fmt(0);
       $('chestCoins').innerHTML = '';
-      stage.className = 'chest-stage t' + tier;
+      stage.className = 'chest-stage t' + tier + (opts.perfume ? ' perfume' : '');
       ov.hidden = false;
       void stage.offsetWidth;
       stage.classList.add('drop');
       Sound.chestShake();
 
       const fast = S.turbo ? 0.6 : 1;
-      const riseMs = (tier ? 3000 : 2200) * fast;
+      const riseMs = (opts.perfume ? 4000 : tier ? 3000 : 2200) * fast;
       let phase = 'intro', closed = false, autoT = 0;
       const timers = [];
       const later = (ms, f) => timers.push(setTimeout(f, ms * fast));
@@ -350,7 +355,7 @@
         ov.removeEventListener('click', onClick);
         Sound.stopFanfare(); coinRain.clear(); ov.hidden = true;
         stage.className = 'chest-stage';
-        message(title + ' ' + fmt(total), true);
+        message(opts.perfume ? 'YOU WON THE PERFUME! + ' + fmt(total) : title + ' ' + fmt(total), true);
         res();
       }
       function onClick() {
@@ -377,15 +382,30 @@
       message(S.credit < BETS[0] ? 'OUT OF CREDIT - TAP CREDIT TO REFILL' : 'LOWER YOUR BET');
       S.auto = false; updateUI(); return;
     }
-    S.busy = true; S.credit -= bet(); setWin(0); clearWins(); updateUI();
-    message('GOOD FORTUNE...');
-    Sound.spinStart();
+    S.busy = true; S.credit -= bet(); S.roundWin = 0; S.lastWin = 0; setWin(0); clearWins(); updateUI();
+    S.spins++;
+    let forced = S.forced; S.forced = null;
+    if (!forced && S.spins === RIG_SPIN && !S.perfumeWon) { forced = rigGrid(); S.rig = true; }
 
-    const grid = S.forced || makeGrid(); S.forced = null;
+    const res = await playReels(forced, false);
+    await settle(res, false);
+    if (res.scatters >= 3) { await sleep(400); await freeSpins(); }
+
+    S.lastWin = S.roundWin;
+    S.busy = false; updateUI();
+    if (S.auto) setTimeout(() => { if (S.auto) spin(); }, S.lastWin > 0 ? 900 : 400);
+  }
+
+  // Spin all five reels to `forced` (or a random grid). Returns what landed.
+  async function playReels(forced, free) {
+    message(free ? 'FREE SPIN...' : 'GOOD FORTUNE...');
+    Sound.spinStart();
+    const grid = forced || makeGrid();
     const base = S.turbo ? 380 : 750, step = S.turbo ? 110 : 210, anticMs = S.turbo ? 900 : 1700;
     const orbsBefore = (r) => grid.slice(0, r).flat().filter((c) => c.s === 'orb').length;
-    const antic = [0, 1, 2, 3, 4].map((r) => r >= 3 && orbsBefore(r) >= TRIGGER - 3 + (r - 3));
-    let extra = 0, landed = 0;
+    const scatBefore = (r) => grid.slice(0, r).flat().filter((c) => c.s === 'scatter').length;
+    const antic = [0, 1, 2, 3, 4].map((r) => (r >= 3 && orbsBefore(r) >= TRIGGER - 3 + (r - 3)) || (r === 4 && scatBefore(4) >= 2));
+    let extra = 0, landed = 0, scat = 0;
     const jobs = grid.map((cells, r) => {
       if (antic[r]) extra += anticMs;
       const dur = base + r * step + extra;
@@ -393,6 +413,7 @@
         Sound.reelStop(r);
         reels[r].el.classList.remove('antic');
         cells.forEach((c, row) => {
+          if (c.s === 'scatter') { const n = scat++; setTimeout(() => { Sound.scatterLand(n); symEl(r, row).classList.add('pop'); }, 40 + row * 30); }
           if (c.s !== 'orb') return;
           const n = landed++;
           setTimeout(() => { Sound.coinHit(n, !!c.jp); symEl(r, row).classList.add('pop'); }, 40 + row * 30);
@@ -403,29 +424,69 @@
     await Promise.all(jobs);
     S.grid = grid;
     await sleep(250);
+    return { grid, landed, scatters: scat };
+  }
 
+  // Pay line wins (doubled in free spins) and start Hold & Spin if enough girls landed.
+  async function settle({ grid, landed, scatters }, free) {
     const wins = evaluate(grid);
+    if (free) wins.forEach((w) => { w.amount *= FS_MULT; });
     const total = wins.reduce((a, w) => a + w.amount, 0);
     if (total > 0) {
       showWins(wins);
-      const sc = pickShowcase(wins);
-      if (sc) { await sleep(450); await charShowcase(sc); }
-      await payWin(total);
+      if (free) {
+        Sound.winSmall(total / bet());
+        const from = S.fs.total; S.fs.total += total; fsHud();
+        message(`WIN ${fmt(total)} (x${FS_MULT})`, true);
+        await rollup($('win'), from, S.fs.total, Math.min(1600, 400 + (total / bet()) * 120));
+      } else {
+        await payWin(total);
+      }
+    } else if (!free) {
+      message(landed >= 3 ? `${landed} GIRLS - ${TRIGGER} TRIGGER HOLD & SPIN` : scatters === 2 ? '2 FREE SPINS SYMBOLS - SO CLOSE!' : 'SPIN AGAIN');
     }
-    else message(landed >= 3 ? `${landed} PEARLS - ${TRIGGER} TRIGGER HOLD & SPIN` : 'SPIN AGAIN');
-
     if (landed >= TRIGGER) { await sleep(500); clearWins(); await holdAndSpin(grid); }
+  }
 
-    S.busy = false; updateUI();
-    if (S.auto) setTimeout(() => { if (S.auto) spin(); }, total > 0 ? 900 : 400);
+  // The rigged spin: exactly six girls, no free spins symbols.
+  function rigGrid() {
+    const g = makeGrid().map((col) => col.map((c) => (c.s === 'orb' || c.s === 'scatter' ? { s: ['J', 'Q', 'K', 'cherry'][(Math.random() * 4) | 0] } : c)));
+    shuffle([...Array(15).keys()]).slice(0, TRIGGER).forEach((i) => { g[Math.floor(i / 3)][i % 3] = makeOrb(false); });
+    return g;
+  }
+
+  // ---------- Free spins ----------
+  function fsHud() { if (S.fs) $('fsLeft').textContent = S.fs.left; }
+  async function freeSpins() {
+    clearWins();
+    S.fs = { left: FS_COUNT, total: 0 };
+    Sound.featureTrigger();
+    await banner('FREE SPINS', `${FS_COUNT} FREE SPINS - ALL WINS x${FS_MULT}`, 2600);
+    $('app').classList.add('freespins'); fsHud(); setWin(0);
+    while (S.fs.left > 0) {
+      S.fs.left--; fsHud(); clearWins();
+      const res = await playReels(null, true);
+      await settle(res, true);
+      if (res.scatters >= 3) {
+        S.fs.left += FS_COUNT; fsHud(); Sound.featureTrigger();
+        await banner('RETRIGGER', `+${FS_COUNT} FREE SPINS`, 1800);
+      }
+      await sleep(S.fs.left ? 650 : 900);
+    }
+    $('app').classList.remove('freespins');
+    const total = S.fs.total; S.fs = null; clearWins();
+    if (total > 0) await payWin(total, 'FREE SPINS WIN');
+    else message('FREE SPINS OVER');
   }
 
   // ---------- Hold & Spin ----------
   async function holdAndSpin(grid) {
     S.feature = true; clearWins(); updateUI();
     const app = $('app'); const hud = $('respinHud');
+    const girlsIn = grid.flat().filter((c) => c.s === 'orb');
+    await charShowcase({ pic: girlsIn[(Math.random() * girlsIn.length) | 0].g, line1: `${girlsIn.length} GIRLS!`, line2: 'HOLD & SPIN', big: true });
     Sound.featureTrigger();
-    await banner('HOLD & SPIN', '3 RESPINS - EVERY NEW PEARL RESETS TO 3', 2600);
+    await banner('HOLD & SPIN', '3 RESPINS - EVERY NEW GIRL RESETS TO 3', 2600);
     app.classList.add('feature');
 
     const cells = [];
@@ -435,19 +496,21 @@
     let respins = 3, locked = cells.filter((c) => c.orb).length;
     const lights = () => hud.querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < respins));
     lights();
-    message('PEARLS LOCK IN PLACE');
+    message('GIRLS LOCK IN PLACE');
     await sleep(700);
 
     while (respins > 0 && locked < 15) {
       respins--; lights();
       Sound.respinStart();
       const empties = cells.filter((c) => !c.orb);
+      // Rigged run: one or two girls land on every respin, so the grid always fills.
+      const picks = S.rig ? new Set(shuffle(empties.slice()).slice(0, Math.min(empties.length, Math.random() < 0.45 ? 2 : 1))) : null;
       let gotNew = false;
-      await Promise.all(empties.map((c, i) => spinCell(c, 450 + i * (S.turbo ? 45 : 90)).then((orb) => {
+      await Promise.all(empties.map((c, i) => spinCell(c, 450 + i * (S.turbo ? 45 : 90), picks ? picks.has(c) : undefined).then((orb) => {
         if (!orb) return;
         c.orb = orb; gotNew = true;
         Sound.coinHit(locked, !!orb.jp); locked++;
-        message(`${locked} PEARLS`);
+        message(`${locked} GIRLS`);
       })));
       if (gotNew && locked < 15) {
         respins = 3; lights(); Sound.respinReset();
@@ -471,13 +534,15 @@
       el.classList.add('collected');
       await sleep(c.orb.jp ? 700 : 90);
     }
-    if (locked >= 15) {
+    const perfume = locked >= 15;
+    if (perfume) {
       Sound.jackpot(); flashJackpot('GRAND');
-      await banner('GRAND JACKPOT', fmt(JP.GRAND * bet()), 2400);
-      total += JP.GRAND * bet();
+      await banner('GRAND PRIZE', 'ALL 15 GIRLS - YOU WON THE PERFUME!', 2600);
+      S.perfumeWon = true;
     }
+    S.rig = false;
 
-    await payWin(total, locked >= 15 ? 'GRAND WIN' : 'HOLD & SPIN WIN');
+    await payWin(total, perfume ? 'GRAND PRIZE' : 'HOLD & SPIN WIN', { perfume });
     app.classList.remove('feature');
     S.feature = false;
     S.grid = grid;
@@ -491,12 +556,13 @@
     el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
   }
 
-  // One empty spot flickers then lands as a pearl or stays empty.
-  function spinCell(c, ms) {
+  // One empty spot flickers then lands as a girl or stays empty.
+  function spinCell(c, ms, force) {
     return new Promise((res) => {
       const holder = reels[c.r].strip.children[c.row + 1];
       const t0 = performance.now();
-      const land = Math.random() < RESPIN_ODDS ? makeOrb(true) : null;
+      const hit = force === undefined ? Math.random() < RESPIN_ODDS : force;
+      const land = hit ? makeOrb(true) : null;
       const iv = setInterval(() => {
         const fake = Math.random() < 0.45 ? makeOrb(true) : { s: 'empty' };
         holder.innerHTML = symHTML(fake);
@@ -512,13 +578,75 @@
     });
   }
 
+  // ---------- Gamble ----------
+  // After a win: risk it on the next card. Colour pays x2, suit pays x4. Up to GAMBLE_MAX goes.
+  const SUITS = [{ s: '\u2665', c: 'red' }, { s: '\u2666', c: 'red' }, { s: '\u2663', c: 'black' }, { s: '\u2660', c: 'black' }];
+  const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const GB = { amt: 0, rounds: 0, busy: false, hist: [] };
+  function gambleOpen() {
+    if (S.busy || S.auto || !(S.lastWin > 0)) return;
+    Sound.click();
+    GB.amt = S.lastWin; GB.rounds = 0; GB.busy = false;
+    S.credit -= GB.amt; S.lastWin = 0; S.busy = true; updateUI();
+    $('gCard').classList.remove('flip', 'won', 'lost');
+    $('gamble').hidden = false;
+    gambleUI('PICK A COLOUR (x2) OR A SUIT (x4)');
+  }
+  function gambleUI(msg) {
+    $('gAmt').textContent = fmt(GB.amt); $('gColor').textContent = fmt(GB.amt * 2); $('gSuit').textContent = fmt(GB.amt * 4);
+    $('gLeft').textContent = GAMBLE_MAX - GB.rounds;
+    if (msg != null) $('gMsg').textContent = msg;
+    document.querySelectorAll('.g-pick').forEach((b) => { b.disabled = GB.busy || GB.amt <= 0 || GB.rounds >= GAMBLE_MAX; });
+    $('gCollect').disabled = GB.busy;
+    $('gHist').innerHTML = GB.hist.map((h) => `<span class="${h.c}">${h.s}</span>`).join('');
+  }
+  async function gamblePick(pick) {
+    if (GB.busy || GB.amt <= 0) return;
+    GB.busy = true; gambleUI('');
+    const card = SUITS[(Math.random() * 4) | 0], rank = RANKS[(Math.random() * 13) | 0];
+    const face = $('gFace');
+    face.className = 'g-face ' + card.c;
+    face.innerHTML = `<span class="g-rank">${rank}</span><span class="g-big">${card.s}</span><span class="g-rank b">${rank}</span>`;
+    const cardEl = $('gCard');
+    cardEl.classList.remove('flip', 'won', 'lost'); void cardEl.offsetWidth;
+    Sound.cardFlip(); cardEl.classList.add('flip');
+    await sleep(700);
+    GB.hist.unshift(card); GB.hist = GB.hist.slice(0, 6);
+    const isSuit = pick.length === 1;
+    const won = isSuit ? pick === card.s : pick === card.c;
+    GB.rounds++;
+    if (won) {
+      GB.amt *= isSuit ? 4 : 2;
+      cardEl.classList.add('won'); Sound.winSmall(isSuit ? 8 : 3);
+      gambleUI(GB.rounds >= GAMBLE_MAX ? `WIN! ${fmt(GB.amt)} - LIMIT REACHED` : `WIN! ${fmt(GB.amt)} - GO AGAIN OR COLLECT`);
+    } else {
+      GB.amt = 0;
+      cardEl.classList.add('lost'); Sound.gambleLose();
+      gambleUI('NO LUCK THIS TIME');
+    }
+    await sleep(1100);
+    GB.busy = false;
+    if (!won || GB.rounds >= GAMBLE_MAX) { await sleep(300); gambleClose(); return; }
+    cardEl.classList.remove('flip', 'won');
+    gambleUI();
+  }
+  function gambleClose() {
+    if (GB.busy) return;
+    $('gamble').hidden = true;
+    S.credit += GB.amt; setWin(GB.amt);
+    message(GB.amt > 0 ? 'GAMBLE COLLECTED ' + fmt(GB.amt) : 'GAMBLE LOST', GB.amt > 0);
+    if (GB.amt > 0) Sound.coinHit(6);
+    GB.amt = 0; S.busy = false; updateUI();
+  }
+
   // ---------- Paytable ----------
   function buildPaytable() {
     $('ptGrid').innerHTML = Object.keys(PAYS).map((s) =>
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-${s}"/></svg><div class="pt-pays">` +
       PAYS[s].map((p, i) => `<b>${i + 3}×</b> ${fmt(p * bet())}`).join('<br>') + '</div></div>').join('') +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except pearls</div></div>` +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-orb"/></svg><div class="pt-pays"><b>FIRE PEARL</b><br>6+ start Hold &amp; Spin</div></div>`;
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except girls and free spins</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>GIRLS</b><br>6+ start Hold &amp; Spin. Fill all 15 to win the perfume</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-scatter"/></svg><div class="pt-pays"><b>FREE SPINS</b><br>3 on reels 1, 3, 5 = ${FS_COUNT} free spins, wins x${FS_MULT}</div></div>`;
   }
 
   // ---------- Wiring ----------
@@ -535,6 +663,9 @@
     $('btnSound').addEventListener('click', () => { Sound.init(); Sound.setEnabled(!Sound.enabled); Sound.click(); updateUI(); });
     $('btnInfo').addEventListener('click', () => { Sound.init(); Sound.click(); buildPaytable(); $('paytable').hidden = false; });
     $('ptClose').addEventListener('click', () => { Sound.click(); $('paytable').hidden = true; });
+    $('btnGamble').addEventListener('click', () => { Sound.init(); gambleOpen(); });
+    document.querySelectorAll('.g-pick').forEach((b) => b.addEventListener('click', () => gamblePick(b.dataset.pick)));
+    $('gCollect').addEventListener('click', () => { Sound.click(); gambleClose(); });
     $('credit').parentElement.addEventListener('click', () => {
       if (S.credit < BETS[0] && !S.busy) { S.credit = START_CREDIT; Sound.init(); Sound.coinHit(4); message('CREDIT REFILLED (PLAY MONEY)'); updateUI(); }
     });
@@ -542,7 +673,7 @@
       if (e.code !== 'Space' && e.code !== 'Enter') return;
       e.preventDefault();
       if (!$('bigwin').hidden) { $('bigwin').click(); return; }
-      if (!$('paytable').hidden) return;
+      if (!$('paytable').hidden || !$('gamble').hidden) return;
       spin();
     });
     addEventListener('resize', sizeCells);
@@ -557,5 +688,5 @@
   updateUI();
   // Debug hook for testing: window.__fp.forceFeature()
   // window.__fp.forceChar('abg', 5) makes the next spin land that character on the first k reels.
-  window.__fp = { S, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'K' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
+  window.__fp = { S, forceFS: () => { S.forced = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r % 2 === 0 ? 'scatter' : 'K' }, { s: 'J' }]); spin(); }, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'K' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
 })();

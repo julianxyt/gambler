@@ -63,12 +63,14 @@
       </g>
     </symbol>
 
-    <!-- Fire pearl (bonus) -->
-    <symbol id="sym-orb" viewBox="0 0 100 100">
-      <path d="M50 4 C58 18 70 12 72 26 C82 22 86 34 92 38 C84 40 90 52 84 58 L50 90 L16 58 C10 52 16 40 8 38 C14 34 18 22 28 26 C30 12 42 18 50 4Z" fill="url(#gFlame)"/>
-      <circle cx="50" cy="52" r="34" fill="url(#gOrb)" stroke="#ffe08a" stroke-width="2"/>
-      <ellipse cx="39" cy="38" rx="13" ry="8" fill="#fff" opacity=".55" transform="rotate(-30 39 38)"/>
-      <path d="M26 64 C36 72 58 76 74 62" fill="none" stroke="#ffd36b" stroke-width="2" opacity=".6"/>
+    <!-- Free spins scatter -->
+    <symbol id="sym-scatter" viewBox="0 0 100 100">
+      <g filter="url(#fShadow)">
+        <path d="M50 1 L58 20 L78 9 L74 31 L96 32 L80 48 L96 64 L74 66 L80 88 L58 78 L50 98 L42 78 L20 88 L26 66 L4 64 L20 48 L4 32 L26 31 L22 9 L42 20 Z" fill="url(#gGold)" stroke="#7a4a08" stroke-width="1.2"/>
+        <circle cx="50" cy="50" r="33" fill="url(#gRed)" stroke="#ffe08a" stroke-width="2"/>
+        <text x="50" y="47" text-anchor="middle" font-family="Cinzel, serif" font-weight="900" font-size="20" fill="#fff3b0" stroke="#4a0a00" stroke-width="1.4" paint-order="stroke">FREE</text>
+        <text x="50" y="67" text-anchor="middle" font-family="Cinzel, serif" font-weight="900" font-size="15" fill="#ffd54a" stroke="#4a0a00" stroke-width="1.4" paint-order="stroke">SPINS</text>
+      </g>
     </symbol>
     <symbol id="sym-empty" viewBox="0 0 100 100"></symbol>
 
@@ -143,6 +145,7 @@
         <span class="respin-label">RESPINS</span>
         <span class="respin-lights"><i></i><i></i><i></i></span>
       </div>
+      <div class="fs-hud" id="fsHud"><span>FREE SPINS</span><b id="fsLeft">8</b><span class="fs-x">ALL WINS x2</span></div>
       <div class="reels" id="reels"></div>
       <div class="fx" id="fx"></div>
       <div class="showcase" id="showcase" hidden>
@@ -153,7 +156,7 @@
     </div>
   </section>
 
-  <div class="message" id="message">6 OR MORE PEARLS TRIGGER HOLD &amp; SPIN</div>
+  <div class="message" id="message">6 GIRLS = HOLD &amp; SPIN &middot; 3 FREE SPINS SYMBOLS = FREE SPINS</div>
 
   <footer class="console">
     <div class="meter"><span class="meter-label">CREDIT</span><span class="meter-val" id="credit">0</span></div>
@@ -168,6 +171,7 @@
       <button class="btn-pill" id="btnTurbo">TURBO</button>
       <button class="btn-pill" id="btnAuto">AUTO</button>
       <button class="btn-pill" id="btnSound">SOUND</button>
+      <button class="btn-pill gamble" id="btnGamble" disabled>GAMBLE</button>
       <button class="btn-spin" id="btnSpin" aria-label="Spin"><span>SPIN</span></button>
     </div>
   </footer>
@@ -183,6 +187,8 @@
     <div class="prize" id="prize">
       <div class="bigwin-cn">恭喜發財</div>
       <div class="bigwin-title" id="bigwinTitle">WIN</div>
+      <img class="prize-img" id="prizeImg" src="img/prize/perfume.png" alt="Perfume">
+      <div class="prize-name">MYRRHE 55</div>
       <div class="bigwin-amount" id="bigwinAmount">0</div>
     </div>
     <div class="chest" id="chest">
@@ -218,6 +224,33 @@
       <div class="chest-coins" id="chestCoins"></div>
     </div>
     <div class="tap-hint" id="tapHint">TAP TO COLLECT</div>
+  </div>
+</div>
+
+<div class="overlay gamble" id="gamble" hidden>
+  <div class="gamble-inner">
+    <div class="g-title">GAMBLE</div>
+    <div class="g-amounts">
+      <div><span>AT STAKE</span><b id="gAmt">$0.00</b></div>
+      <div><span>COLOUR WIN</span><b id="gColor">$0.00</b></div>
+      <div><span>SUIT WIN</span><b id="gSuit">$0.00</b></div>
+    </div>
+    <div class="g-table">
+      <div class="g-card" id="gCard"><div class="g-inner"><div class="g-back"></div><div class="g-face" id="gFace"></div></div></div>
+      <div class="g-side"><span class="g-label">HISTORY</span><div class="g-hist" id="gHist"></div><span class="g-label">GAMBLES LEFT <b id="gLeft">5</b></span></div>
+    </div>
+    <div class="g-msg" id="gMsg"></div>
+    <div class="g-row">
+      <button class="g-pick colour red" data-pick="red">RED<small>x2</small></button>
+      <button class="g-pick colour black" data-pick="black">BLACK<small>x2</small></button>
+    </div>
+    <div class="g-row">
+      <button class="g-pick suit red" data-pick="&#9829;">&#9829;<small>x4</small></button>
+      <button class="g-pick suit red" data-pick="&#9830;">&#9830;<small>x4</small></button>
+      <button class="g-pick suit black" data-pick="&#9827;">&#9827;<small>x4</small></button>
+      <button class="g-pick suit black" data-pick="&#9824;">&#9824;<small>x4</small></button>
+    </div>
+    <button class="btn-pill gold" id="gCollect">COLLECT</button>
   </div>
 </div>
 
