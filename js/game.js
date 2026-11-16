@@ -585,7 +585,6 @@
   // One empty spot during Hold & Spin. Every so often symbols streak down through it like a reel
   // (sometimes one, sometimes a few in a row), then a baddie slides in and settles, or it stays empty.
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const TEASERS = ['A', 'K', 'Q', 'J', 'seven', 'cherry', 'diamond'];
   function streak(holder, sym, dur, frames) {
     const f = document.createElement('div');
     f.className = 'cell-fly'; f.innerHTML = symHTML(sym);
@@ -605,7 +604,7 @@
       await wait((90 + Math.random() * 420) * k);                 // sporadic gap
       const burst = Math.random() < 0.4 ? 2 + ((Math.random() * 3) | 0) : 1; // sometimes a few in a row
       for (let b = 0; b < burst; b++) {
-        const sym = Math.random() < 0.55 ? makeOrb(true) : { s: TEASERS[(Math.random() * TEASERS.length) | 0] };
+        const sym = makeOrb(true); // only baddies streak through; the gaps between are the "nothing"
         if (b === 0) Sound.reelTick();
         (await streak(holder, sym, (110 + Math.random() * 80) * k)).remove();
       }
