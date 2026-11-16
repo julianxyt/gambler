@@ -15,7 +15,7 @@
   const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
-  const RIG_SPIN = 15;               // the Hold & Spin that wins the perfume lands on this paid spin
+  const RIG_SPIN = 15;               // this paid spin always lands Hold & Spin and fills all 15 (see reveal())
   const GAMBLE_MAX = 5;
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
@@ -27,7 +27,7 @@
   const S = {
     credit: load('fp_credit', START_CREDIT), betIdx: load('fp_bet', 1),
     grid: null, busy: false, auto: false, turbo: load('fp_turbo', false), feature: false,
-    spins: 0, rig: false, perfumeWon: false, fs: null, roundWin: 0, lastWin: 0, forced: null,
+    spins: 0, rig: false, rigDone: false, revealPending: false, fs: null, roundWin: 0, lastWin: 0, forced: null,
   };
   const bet = () => BETS[S.betIdx];
   function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
@@ -105,7 +105,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? 'PERFUME' : fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -355,7 +355,7 @@
         ov.removeEventListener('click', onClick);
         Sound.stopFanfare(); coinRain.clear(); ov.hidden = true;
         stage.className = 'chest-stage';
-        message(opts.perfume ? 'YOU WON THE PERFUME! + ' + fmt(total) : title + ' ' + fmt(total), true);
+        message(opts.perfume ? 'ENJOY!' : title + ' ' + fmt(total), true);
         res();
       }
       function onClick() {
@@ -385,7 +385,7 @@
     S.busy = true; S.credit -= bet(); S.roundWin = 0; S.lastWin = 0; setWin(0); clearWins(); updateUI();
     S.spins++;
     let forced = S.forced; S.forced = null;
-    if (!forced && S.spins === RIG_SPIN && !S.perfumeWon) { forced = rigGrid(); S.rig = true; }
+    if (!forced && S.spins === RIG_SPIN && !S.rigDone) { forced = rigGrid(); S.rig = true; S.auto = false; }
 
     const res = await playReels(forced, false);
     await settle(res, false);
@@ -393,6 +393,8 @@
 
     S.lastWin = S.roundWin;
     S.busy = false; updateUI();
+    // After the rigged feature, offer the gamble straight away; the surprise follows it.
+    if (S.revealPending) { await sleep(600); gambleOpen('FEATURE WON! GAMBLE IT FOR MORE?'); return; }
     if (S.auto) setTimeout(() => { if (S.auto) spin(); }, S.lastWin > 0 ? 900 : 400);
   }
 
@@ -534,15 +536,14 @@
       el.classList.add('collected');
       await sleep(c.orb.jp ? 700 : 90);
     }
-    const perfume = locked >= 15;
-    if (perfume) {
+    if (locked >= 15) {
       Sound.jackpot(); flashJackpot('GRAND');
-      await banner('GRAND PRIZE', 'ALL 15 GIRLS - YOU WON THE PERFUME!', 2600);
-      S.perfumeWon = true;
+      await banner('GRAND JACKPOT', fmt(JP.GRAND * bet()), 2400);
+      total += JP.GRAND * bet();
     }
-    S.rig = false;
+    if (S.rig) { S.rig = false; S.rigDone = true; S.revealPending = true; }
 
-    await payWin(total, perfume ? 'GRAND PRIZE' : 'HOLD & SPIN WIN', { perfume });
+    await payWin(total, locked >= 15 ? 'GRAND WIN' : 'HOLD & SPIN WIN');
     app.classList.remove('feature');
     S.feature = false;
     S.grid = grid;
@@ -583,14 +584,14 @@
   const SUITS = [{ s: '\u2665', c: 'red' }, { s: '\u2666', c: 'red' }, { s: '\u2663', c: 'black' }, { s: '\u2660', c: 'black' }];
   const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const GB = { amt: 0, rounds: 0, busy: false, hist: [] };
-  function gambleOpen() {
+  function gambleOpen(prompt) {
     if (S.busy || S.auto || !(S.lastWin > 0)) return;
     Sound.click();
     GB.amt = S.lastWin; GB.rounds = 0; GB.busy = false;
     S.credit -= GB.amt; S.lastWin = 0; S.busy = true; updateUI();
     $('gCard').classList.remove('flip', 'won', 'lost');
     $('gamble').hidden = false;
-    gambleUI('PICK A COLOUR (x2) OR A SUIT (x4)');
+    gambleUI(prompt || 'PICK A COLOUR (x2) OR A SUIT (x4)');
   }
   function gambleUI(msg) {
     $('gAmt').textContent = fmt(GB.amt); $('gColor').textContent = fmt(GB.amt * 2); $('gSuit').textContent = fmt(GB.amt * 4);
@@ -633,10 +634,55 @@
   function gambleClose() {
     if (GB.busy) return;
     $('gamble').hidden = true;
-    S.credit += GB.amt; setWin(GB.amt);
-    message(GB.amt > 0 ? 'GAMBLE COLLECTED ' + fmt(GB.amt) : 'GAMBLE LOST', GB.amt > 0);
-    if (GB.amt > 0) Sound.coinHit(6);
+    const amt = GB.amt;
+    S.credit += amt; setWin(amt);
+    message(amt > 0 ? 'GAMBLE COLLECTED ' + fmt(amt) : 'GAMBLE LOST', amt > 0);
+    if (amt > 0) Sound.coinHit(6);
     GB.amt = 0; S.busy = false; updateUI();
+    if (S.revealPending) reveal(amt <= 0, amt);
+  }
+
+  // ---------- The surprise ----------
+  // A full-screen line typed out letter by letter. Advances by itself, or on tap.
+  function say(text, holdMs, big) {
+    return new Promise((res) => {
+      const ov = $('transmute'), el = $('tmText');
+      el.textContent = ''; el.className = 'tm-text' + (big ? ' big' : '');
+      ov.hidden = false; ov.classList.remove('out');
+      Sound.mystery(big);
+      let i = 0, done = false;
+      const iv = setInterval(() => { el.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(iv); later = setTimeout(end, holdMs); } }, 55);
+      let later = 0;
+      function end() {
+        if (done) return; done = true;
+        clearInterval(iv); clearTimeout(later); el.textContent = text;
+        ov.removeEventListener('click', end);
+        ov.classList.add('out');
+        setTimeout(() => { ov.hidden = true; res(); }, 450);
+      }
+      ov.addEventListener('click', end);
+    });
+  }
+  // Roll a meter's money down to nothing.
+  function drain(id, from) { return rollup($(id), from, 0, 1800); }
+
+  async function reveal(lost, earned) {
+    S.revealPending = false; S.busy = true; S.auto = false; updateUI();
+    await sleep(500);
+    if (lost) {
+      await say('BUT WAIT...', 1600, true);
+      const rest = S.credit;
+      const d = drain('credit', rest);
+      await say('THE REST OF YOUR MONEY HAS BEEN TRANSMUTED INTO A...', 1500);
+      await d; S.credit = 0;
+    } else {
+      const d = drain('win', earned);
+      await say('YOUR EARNINGS HAVE BEEN TRANSMUTED INTO...', 1500);
+      await d; S.credit = Math.max(0, S.credit - earned);
+    }
+    setWin(0); updateUI();
+    await bigWin(0, 'MYRRHE 55', 0, { perfume: true });
+    S.busy = false; updateUI();
   }
 
   // ---------- Paytable ----------
@@ -645,7 +691,7 @@
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-${s}"/></svg><div class="pt-pays">` +
       PAYS[s].map((p, i) => `<b>${i + 3}×</b> ${fmt(p * bet())}`).join('<br>') + '</div></div>').join('') +
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except girls and free spins</div></div>` +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>GIRLS</b><br>6+ start Hold &amp; Spin. Fill all 15 to win the perfume</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>GIRLS</b><br>6+ start Hold &amp; Spin. Fill all 15 for the GRAND</div></div>` +
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-scatter"/></svg><div class="pt-pays"><b>FREE SPINS</b><br>3 on reels 1, 3, 5 = ${FS_COUNT} free spins, wins x${FS_MULT}</div></div>`;
   }
 

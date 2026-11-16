@@ -343,6 +343,15 @@ const Sound = (() => {
       if (n >= 2) gong(t, 80, 0.4, master, 2);
     },
 
+    // Mysterious build for the reveal screens: low gong, slow rising shimmer.
+    mystery(big = false) {
+      if (!ready()) return;
+      const t = now();
+      gong(t, big ? 50 : 62, big ? 1 : 0.6, master, 5);
+      for (let i = 0; i < 12; i++) bell(noteFreq(392, i), t + 0.4 + i * 0.16, 0.06 + i * 0.006, 2.2);
+      whoosh(t + 0.2, 2.4, 200, 3000, 0.12);
+    },
+
     // Gamble card flip.
     cardFlip() {
       if (!ready()) return;
