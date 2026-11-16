@@ -31,3 +31,7 @@ To swap in your own audio files, see `sounds/custom/README.md`.
 - `css/style.css` - the red-and-gold cabinet skin
 - `js/audio.js` - sound engine
 - `js/game.js` - reels, wins, Hold & Spin, win screen
+
+## Credits
+
+Character icons in `img/icons/` come from [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT, see `img/icons/LICENSE-fluentui-emoji.txt`). The two Pomeranians are the same dog icon, tinted white or brown in `index.html`.
