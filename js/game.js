@@ -113,7 +113,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? '?????' : el.dataset.jp === 'MAJOR' ? MAJOR_PRIZE : fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'MAJOR' ? MAJOR_PRIZE : fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -321,7 +321,7 @@
   function bigWin(total, title, ratio, opts = {}) {
     return new Promise((res) => {
       const ov = $('bigwin'), stage = $('chestStage'), amt = $('bigwinAmount');
-      const tier = opts.perfume ? 3 : /HOLD|FREE/.test(title) ? Math.max(1, ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1)
+      const tier = opts.perfume ? 3 : /HOLD|FREE|FULL/.test(title) ? Math.max(1, ratio >= 100 ? 3 : ratio >= 40 ? 2 : 1)
         : ratio >= 100 ? 3 : ratio >= 40 ? 2 : ratio >= 15 ? 1 : 0;
       $('bigwinTitle').textContent = title;
       amt.textContent = fmt(0);
@@ -572,14 +572,9 @@
       el.classList.add('collected');
       await sleep(c.orb.jp ? 700 : 90);
     }
-    if (locked >= 15) {
-      Sound.jackpot(); flashJackpot('GRAND');
-      await banner('GRAND JACKPOT', '?????', 2400);
-      total += JP.GRAND * bet();
-    }
     if (S.rig) { S.rig = false; S.rigDone = true; S.revealPending = true; }
 
-    await payWin(total, locked >= 15 ? 'GRAND WIN' : 'HOLD & SPIN WIN');
+    await payWin(total, locked >= 15 ? 'FULL BOARD WIN' : 'HOLD & SPIN WIN');
     app.classList.remove('feature');
     S.feature = false;
     S.grid = grid;
@@ -720,7 +715,7 @@
     message(total > 0 ? 'GAMBLE COLLECTED ' + fmt(total) : 'GAMBLE LOST', total > 0);
     if (total > 0) Sound.coinHit(6);
     GB.amt = 0; S.busy = false; updateUI();
-    if (S.revealPending) reveal(amt <= 0, total);
+    if (S.revealPending) reveal();
   }
 
   // ---------- The surprise ----------
@@ -745,24 +740,15 @@
     });
   }
   // Roll a meter's money down to nothing.
-  function drain(id, from) { return rollup($(id), from, 0, 1800); }
-
-  async function reveal(lost, earned) {
+  // After the final gamble (won, lost or collected): a surprise mystery GRAND jackpot, which is the
+  // Le Labo. Whatever money he has is kept.
+  async function reveal() {
     S.revealPending = false; S.busy = true; S.auto = false; updateUI();
     Sound.duckMusic(true);
     await sleep(500);
-    if (lost) {
-      await say('BUT WAIT...', 1600, true);
-      const rest = S.credit;
-      const d = drain('credit', rest);
-      await say('THE REST OF YOUR MONEY HAS BEEN TRANSMUTED INTO A...', 1500);
-      await d; S.credit = 0;
-    } else {
-      const d = drain('win', earned);
-      await say('YOUR EARNINGS HAVE BEEN TRANSMUTED INTO...', 1500);
-      await d; S.credit = Math.max(0, S.credit - earned);
-    }
-    setWin(0); updateUI();
+    await say('BUT WAIT...', 1600, true);
+    Sound.jackpot();
+    await say('YOU ALSO WON THE MYSTERY GRAND JACKPOT!', 1500);
     await bigWin(0, 'LE LABO PERFUME', 0, { perfume: true });
     S.busy = false; updateUI();
   }
@@ -773,7 +759,7 @@
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-${s}"/></svg><div class="pt-pays">` +
       PAYS[s].map((p, i) => `<b>${i + 3}×</b> ${fmt(p * bet())}`).join('<br>') + '</div></div>').join('') +
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-wild"/></svg><div class="pt-pays"><b>WILD</b><br>Reels 2-4, substitutes for all except baddies and free spins</div></div>` +
-      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>BADDIES</b><br>6+ start Hold &amp; Spin. Fill all 15 for the GRAND</div></div>` +
+      `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-kgirl"/></svg><div class="pt-pays"><b>BADDIES</b><br>6+ start Hold &amp; Spin</div></div>` +
       `<div class="pt-item"><svg viewBox="0 0 100 100"><use href="#sym-scatter"/></svg><div class="pt-pays"><b>FREE SPINS</b><br>3 on reels 1, 3, 5 = ${FS_COUNT} free spins, wins x${FS_MULT}</div></div>`;
   }
 
