@@ -112,7 +112,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'MAJOR' ? MAJOR_PRIZE : fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'MAJOR' ? '??' : fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -325,7 +325,7 @@
       $('bigwinTitle').textContent = title;
       amt.textContent = fmt(0);
       $('chestCoins').innerHTML = '';
-      stage.className = 'chest-stage t' + tier + (opts.perfume ? ' perfume' : '');
+      stage.className = 'chest-stage t' + tier + (opts.perfume ? ' perfume reeling' : '');
       // Prize chests (perfume, headphones) show a picture instead of cash.
       if (opts.perfume) $('prizeImg').src = opts.prize || 'img/prize/reveal.png';
       ov.hidden = false;
@@ -349,8 +349,42 @@
         Sound.chestOpen(tier);
         chestCoins(tier ? 26 : 14);
         if (tier) { coinRain.start(tier); Sound.bigWinFanfare(tier); } else Sound.winSmall(ratio);
-        rollup(amt, 0, total, riseMs).then(breathe);
+        if (opts.perfume) reel.run(riseMs).then(breathe);
+        else rollup(amt, 0, total, riseMs).then(breathe);
       }
+      // Prize chests: other symbols streak through like a reel, slowing down, then the real prize
+      // drops in and only then does its name appear.
+      const reel = {
+        stop: false,
+        async run(ms) {
+          const box = $('prizeReel'), img = $('prizeImg');
+          try { await img.decode(); } catch (e) { /* show it anyway */ }
+          box.style.width = box.style.height = '';
+          const h = img.offsetHeight || 200; // offset sizes ignore the rising scale transform
+          box.style.width = Math.max(h * 0.8, img.offsetWidth) + 'px';
+          box.style.height = h + 'px';
+          box.classList.remove('landed'); box.classList.add('spinning');
+          const pool = ['seven', 'diamond', 'star', 'bar', 'melon', 'grapes', 'cherry'].map((n) => `img/symbols/${n}.png`)
+            .concat(GIRLS.map((g) => `img/icons/${g}.png`));
+          if (!/headphones/.test(img.src)) pool.push('img/prize/headphones.svg');
+          const end = performance.now() + ms * 0.85;
+          let last = '';
+          while (!this.stop && performance.now() < end) {
+            const left = (end - performance.now()) / (ms * 0.85); // 1 -> 0
+            const dur = 90 + (1 - left) * (1 - left) * 260; // starts quick, slows to a crawl
+            let src; do { src = pool[(Math.random() * pool.length) | 0]; } while (src === last); last = src;
+            const d = document.createElement('img'); d.className = 'decoy'; d.src = src; box.appendChild(d);
+            Sound.reelTick();
+            await d.animate([{ transform: 'translateY(-105%)' }, { transform: 'translateY(105%)' }], { duration: dur, easing: 'linear' }).finished.catch(() => {});
+            d.remove();
+          }
+          box.querySelectorAll('.decoy').forEach((d) => d.remove());
+          box.classList.remove('spinning'); void box.offsetWidth; box.classList.add('landed');
+          Sound.reelStop(2); Sound.jackpot();
+          stage.classList.remove('reeling');
+          await sleep(500);
+        },
+      };
       function breathe() {
         if (phase === 'breathe' || closed) return;
         phase = 'breathe';
@@ -360,7 +394,7 @@
         if (S.auto) autoT = setTimeout(close, 2500);
       }
       function close() {
-        if (closed) return; closed = true;
+        if (closed) return; closed = true; reel.stop = true;
         timers.forEach(clearTimeout); clearTimeout(autoT);
         ov.removeEventListener('click', onClick);
         Sound.stopFanfare(); Sound.duckMusic(false); coinRain.clear(); ov.hidden = true;
@@ -370,6 +404,7 @@
       }
       function onClick() {
         if (phase === 'intro') { timers.forEach(clearTimeout); open(); return; }
+        if (phase === 'rise' && opts.perfume) { reel.stop = true; stage.classList.add('skip'); return; }
         if (phase === 'rise') { if (amt._skip) amt._skip(); stage.classList.add('skip'); breathe(); return; }
         close();
       }
@@ -404,8 +439,14 @@
 
     S.lastWin = S.roundWin;
     S.busy = false; updateUI();
-    // After the rigged feature, offer the gamble straight away; the surprise follows it.
-    if (S.revealPending) { await sleep(600); gambleOpen('FEATURE WON! GAMBLE IT FOR MORE?'); return; }
+    // After the rigged feature: a headphones gamble he can't lose; the perfume surprise follows it.
+    if (S.revealPending) {
+      S.busy = true; S.auto = false; updateUI();
+      await sleep(600);
+      await say('BUT DO YOU WANT TO DOUBLE IT AND GIVE IT TO THE NEXT PERSON?', 2600);
+      prizeGambleOpen();
+      return;
+    }
     if (S.auto) setTimeout(() => { if (S.auto) spin(); }, S.lastWin > 0 ? 900 : 400);
   }
 
@@ -671,15 +712,24 @@
     $('gamble').hidden = false;
     gambleUI(prompt || 'PICK RED OR BLACK (x2), OR A SUIT (x4)');
   }
+  // The headphones gamble: same screen, but it counts headphones and every pick wins.
+  function prizeGambleOpen() {
+    Object.assign(GB, { amt: 1, prize: true, busy: false, hover: 'colour' });
+    S.busy = true; updateUI();
+    $('gCard').classList.remove('flip', 'won', 'lost');
+    $('gamble').hidden = false;
+    gambleUI('DOUBLE THE HEADPHONES AS MANY TIMES AS YOU LIKE');
+  }
+  const gVal = (v) => (GB.prize ? `${v.toLocaleString('en-AU')}<small>${v === 1 ? 'HEADPHONE' : 'HEADPHONES'}</small>` : fmt(v));
   function gambleUI(msg) {
     const suit = GB.hover === 'suit';
     $('gmCredit').textContent = fmt(S.credit);
     $('gmBet').textContent = fmt(bet());
-    $('gmWin').textContent = fmt(GB.amt);
+    $('gmWin').innerHTML = gVal(GB.amt);
     $('gLeftLbl').textContent = suit ? 'SUIT GAMBLE' : 'COLOUR GAMBLE';
     $('gRightLbl').textContent = suit ? 'TO WIN (x4)' : 'TO WIN (x2)';
-    $('gAmt').textContent = fmt(GB.amt);
-    $('gToWin').textContent = fmt(GB.amt * (suit ? 4 : 2));
+    $('gAmt').innerHTML = gVal(GB.amt);
+    $('gToWin').innerHTML = gVal(GB.amt * (suit ? 4 : 2));
     if (msg != null) $('gMsg').textContent = msg;
     const off = GB.busy || GB.amt <= 0;
     document.querySelectorAll('.g-pick').forEach((b) => { b.disabled = off; });
@@ -693,7 +743,9 @@
     GB.hover = isSuit ? 'suit' : 'colour';
     const st = GB.amt;
     gambleUI('');
-    const card = SUITS[(Math.random() * 4) | 0], rank = RANKS[(Math.random() * 13) | 0];
+    // In the headphones gamble the card always matches his pick.
+    const fit = GB.prize ? SUITS.filter((x) => (isSuit ? x.s === pick : x.c === pick)) : SUITS;
+    const card = fit[(Math.random() * fit.length) | 0], rank = RANKS[(Math.random() * 13) | 0];
     const face = $('gFace');
     face.className = 'g-face ' + card.c;
     face.innerHTML = `<span class="g-rank">${rank}<i>${card.s}</i></span><span class="g-big">${card.s}</span><span class="g-rank b">${rank}<i>${card.s}</i></span>`;
@@ -704,9 +756,9 @@
     GB.hist.unshift(card); GB.hist = GB.hist.slice(0, 8);
     const won = isSuit ? pick === card.s : pick === card.c;
     if (won) {
-      GB.amt = cents(st * (isSuit ? 4 : 2));
+      GB.amt = GB.prize ? st * (isSuit ? 4 : 2) : cents(st * (isSuit ? 4 : 2));
       cardEl.classList.add('won'); Sound.winSmall(isSuit ? 8 : 3);
-      gambleUI(`WIN ${fmt(GB.amt)} - GAMBLE AGAIN OR TAKE WIN`);
+      gambleUI(GB.prize ? `${GB.amt.toLocaleString('en-AU')} HEADPHONES! DOUBLE AGAIN OR TAKE WIN` : `WIN ${fmt(GB.amt)} - GAMBLE AGAIN OR TAKE WIN`);
     } else {
       GB.amt = 0;
       cardEl.classList.add('lost'); Sound.gambleLose();
@@ -721,6 +773,13 @@
   function gambleClose() {
     if (GB.busy) return;
     $('gamble').hidden = true;
+    if (GB.prize) {
+      const n = GB.amt; GB.prize = false; GB.amt = 0;
+      message(`${n.toLocaleString('en-AU')} HEADPHONES FOR THE NEXT PERSON!`, true); Sound.coinHit(6);
+      S.busy = false; updateUI();
+      if (S.revealPending) reveal();
+      return;
+    }
     const total = GB.amt;
     S.credit += total; setWin(total);
     message(total > 0 ? 'GAMBLE COLLECTED ' + fmt(total) : 'GAMBLE LOST', total > 0);
@@ -849,5 +908,5 @@
   updateUI();
   // Debug hook for testing: window.__fp.forceFeature()
   // window.__fp.forceChar('abg', 5) makes the next spin land that character on the first k reels.
-  window.__fp = { S, forceFS: () => { S.forced = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r % 2 === 0 ? 'scatter' : 'K' }, { s: 'J' }]); spin(); }, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'K' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
+  window.__fp = { S, bigWin, prizeGambleOpen, forceFS: () => { S.forced = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r % 2 === 0 ? 'scatter' : 'K' }, { s: 'J' }]); spin(); }, forceChar: (sym, k = 5) => { const g = [0, 1, 2, 3, 4].map((r) => [{ s: 'Q' }, { s: r < k ? sym : 'J' }, { s: 'K' }]); S.forced = g; spin(); }, forceFeature: () => { if (!S.busy) { S.busy = true; const g = makeGrid(); let n = 0; g.flat().forEach((c, i) => { if (n < 6 && i % 2 === 0) { Object.assign(c, makeOrb(false)); n++; } }); S.grid = g; for (let r = 0; r < 5; r++) renderReel(r, g[r]); holdAndSpin(g).then(() => { S.busy = false; updateUI(); }); } } };
 })();
