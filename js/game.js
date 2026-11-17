@@ -393,7 +393,7 @@
     S.busy = true; S.credit -= bet(); S.roundWin = 0; S.lastWin = 0; setWin(0); clearWins(); updateUI();
     S.spins++;
     let forced = S.forced; S.forced = null;
-    if (!forced && S.spins === RIG_SPIN && !S.rigDone) { forced = rigGrid(); S.rig = true; S.auto = false; }
+    if (!forced && (S.forceRig || (S.spins === RIG_SPIN && !S.rigDone))) { S.forceRig = false; forced = rigGrid(); S.rig = true; S.auto = false; }
     if (!forced && S.spins <= QUIET_SPINS) forced = quietGrid();
 
     const res = await playReels(forced, false);
@@ -798,6 +798,15 @@
       spin();
     });
     addEventListener('resize', sizeCells);
+
+    // Secret test backdoor: tap the MINI plaque 5 times in a row (each within 2 s of the last).
+    // The plaque pulses once to confirm, and the next spin is the rigged feature -> gamble -> reveal.
+    let miniTaps = 0, miniLast = 0;
+    document.querySelector('.jp-mini').addEventListener('click', () => {
+      const t = performance.now();
+      miniTaps = t - miniLast < 2000 ? miniTaps + 1 : 1; miniLast = t;
+      if (miniTaps >= 5 && !S.busy && !S.feature) { miniTaps = 0; S.forceRig = true; flashJackpot('MINI'); }
+    });
   }
 
   sizeCells();
