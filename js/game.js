@@ -657,6 +657,8 @@
   const SUITS = [{ s: '\u2665', c: 'red' }, { s: '\u2666', c: 'red' }, { s: '\u2663', c: 'black' }, { s: '\u2660', c: 'black' }];
   const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const GB = { amt: 0, banked: 0, rounds: 0, busy: false, half: false, hover: 'colour', hist: [] };
+  // Seed the history so the first gamble shows a believable past run of cards.
+  GB.hist = Array.from({ length: 8 }, () => SUITS[Math.floor(Math.random() * 4)]);
   const cents = (v) => Math.round(v * 100) / 100;
   const credits = (v) => Math.round(v * 100).toLocaleString('en-AU');
   const dual = (v) => `${credits(v)}<small>${fmt(v)}</small>`;
