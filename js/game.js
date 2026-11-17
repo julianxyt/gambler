@@ -561,7 +561,8 @@
         else message(`${locked} BADDIES`);
       })));
       if (gotNew && locked < 15) {
-        respins = 3; lights(); Sound.respinReset();
+        // A new baddie doesn't always give the full 3 back: sometimes it's a full reset, otherwise just +1.
+        respins = Math.random() < 0.3 ? 3 : Math.min(3, respins + 1); lights(); Sound.respinReset();
         hud.classList.remove('reset'); void hud.offsetWidth; hud.classList.add('reset');
       }
       await sleep(1000);
@@ -631,7 +632,7 @@
       passes++;
     }
     // Decided at the end, so taps made while it was streaking still count.
-    const odds = Math.min(0.6, RESPIN_ODDS + 0.12 * (c.boost || 0));
+    const odds = Math.min(0.2, RESPIN_ODDS + 0.03 * (c.boost || 0));
     const hit = force === undefined ? Math.random() < odds : !!force;
     const land = force === 'MAJOR' ? { s: 'orb', jp: 'MAJOR', g: girl() } : hit ? makeOrb(true) : null;
     if (land) {
