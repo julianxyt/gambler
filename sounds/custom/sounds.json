@@ -1,0 +1,7 @@
+{
+  "background_music": "game_music.mp3",
+  "coin_hit": "ring.mp3",
+  "feature_trigger": "gong.mp3",
+  "jackpot": "gong.mp3",
+  "big_win_fanfare": "winning_music.mp3"
+}

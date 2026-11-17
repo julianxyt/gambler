@@ -1,4 +1,1 @@
-# Your own sound files stay on your machine.
-sounds/custom/*
-!sounds/custom/README.md
-!sounds/custom/sounds.example.json
+# Custom sounds are committed so the GitHub Pages site plays them.
