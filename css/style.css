@@ -681,3 +681,6 @@ button:disabled { cursor: default; filter: grayscale(.7) brightness(.6); }
 
 /* Baddie coins only show their value tag inside Hold & Spin */
 #app:not(.feature) .orb-val { display: none; }
+
+/* MAJOR plaque shows a prize name instead of cash */
+.jp-major .jp-val { font-size: clamp(11px, 2.3vw, 18px); letter-spacing: .02em; white-space: nowrap; }

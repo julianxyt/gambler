@@ -58,12 +58,13 @@
   function makeOrb(inFeature) { return Object.assign(rollOrb(inFeature), { g: girl() }); }
   function rollOrb(inFeature) {
     const r = Math.random();
-    if (inFeature && r < 0.008) return { s: 'orb', jp: 'MAJOR' };
     if (r < 0.03) return { s: 'orb', jp: 'MINOR' };
     if (r < 0.09) return { s: 'orb', jp: 'MINI' };
     return { s: 'orb', v: weighted(ORB_MULTS) * bet() };
   }
-  const orbValue = (c) => (c.jp ? JP[c.jp] * bet() : c.v);
+  // MAJOR is the headphones: a prize, not cash. It only ever lands in the rigged feature.
+  const MAJOR_PRIZE = 'HEADPHONES';
+  const orbValue = (c) => (c.jp === 'MAJOR' ? 0 : c.jp ? JP[c.jp] * bet() : c.v);
   function makeCell(reel) { const s = pickSym(reel); return s === 'orb' ? makeOrb(false) : { s }; }
   function makeGrid() { return [0, 1, 2, 3, 4].map((r) => [0, 1, 2].map(() => makeCell(r))); }
 
@@ -112,7 +113,7 @@
   function updateUI() {
     $('credit').textContent = fmt(S.credit);
     $('bet').textContent = fmt(bet());
-    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? '?????' : fmt(JP[el.dataset.jp] * bet()); });
+    document.querySelectorAll('.jp-val').forEach((el) => { el.textContent = el.dataset.jp === 'GRAND' ? '?????' : el.dataset.jp === 'MAJOR' ? MAJOR_PRIZE : fmt(JP[el.dataset.jp] * bet()); });
     const lock = S.busy || S.feature;
     $('betUp').disabled = lock || S.betIdx >= BETS.length - 1;
     $('betDown').disabled = lock || S.betIdx <= 0;
@@ -518,7 +519,7 @@
     for (let r = 0; r < 5; r++) for (let row = 0; row < 3; row++) cells.push({ r, row, orb: grid[r][row].s === 'orb' ? grid[r][row] : null });
     for (let r = 0; r < 5; r++) renderReel(r, [0, 1, 2].map((row) => grid[r][row].s === 'orb' ? grid[r][row] : { s: 'empty' }));
 
-    let respins = 3, locked = cells.filter((c) => c.orb).length;
+    let respins = 3, locked = cells.filter((c) => c.orb).length, majorLanded = false;
     const lights = () => hud.querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < respins));
     lights();
     message('BADDIES LOCK IN PLACE');
@@ -530,14 +531,18 @@
       const empties = cells.filter((c) => !c.orb);
       // Rigged run: one or two girls land on every respin, so the grid always fills.
       const picks = S.rig ? new Set(shuffle(empties.slice()).slice(0, Math.min(empties.length, Math.random() < 0.45 ? 2 : 1))) : null;
+      // ...and once only a few spots are left, one of them lands the MAJOR (headphones).
+      const majorCell = picks && !majorLanded && empties.length <= 4 ? [...picks][0] : null;
       let gotNew = false;
       // Slower than the base game: each empty spot keeps streaking for a while, and they settle one by one.
       const order = shuffle(empties.slice());
-      await Promise.all(empties.map((c) => spinCell(c, (S.turbo ? 700 : 1500) + order.indexOf(c) * (S.turbo ? 120 : 260), picks ? picks.has(c) : undefined).then((orb) => {
+      await Promise.all(empties.map((c) => spinCell(c, (S.turbo ? 700 : 1500) + order.indexOf(c) * (S.turbo ? 120 : 260),
+        picks ? (c === majorCell ? 'MAJOR' : picks.has(c)) : undefined).then((orb) => {
         if (!orb) return;
         c.orb = orb; gotNew = true;
         Sound.coinHit(locked, !!orb.jp); locked++;
-        message(`${locked} BADDIES`);
+        if (orb.jp === 'MAJOR') { majorLanded = true; flashJackpot('MAJOR'); message(`MAJOR - ${MAJOR_PRIZE}!`, true); }
+        else message(`${locked} BADDIES`);
       })));
       if (gotNew && locked < 15) {
         respins = 3; lights(); Sound.respinReset();
@@ -557,7 +562,8 @@
       const v = orbValue(c.orb);
       if (c.orb.jp) { Sound.jackpot(); flashJackpot(c.orb.jp); } else Sound.collect(i);
       const from = total; total += v;
-      await rollup($('win'), from, total, c.orb.jp ? 900 : 220);
+      if (c.orb.jp === 'MAJOR') await banner('MAJOR PRIZE', `${MAJOR_PRIZE} \u{1F3A7}`, 2800);
+      else await rollup($('win'), from, total, c.orb.jp ? 900 : 220);
       el.classList.add('collected');
       await sleep(c.orb.jp ? 700 : 90);
     }
@@ -594,8 +600,8 @@
   }
   async function spinCell(c, ms, force) {
     const holder = reels[c.r].strip.children[c.row + 1];
-    const hit = force === undefined ? Math.random() < RESPIN_ODDS : force;
-    const land = hit ? makeOrb(true) : null;
+    const hit = force === undefined ? Math.random() < RESPIN_ODDS : !!force;
+    const land = force === 'MAJOR' ? { s: 'orb', jp: 'MAJOR', g: girl() } : hit ? makeOrb(true) : null;
     const k = S.turbo ? 0.6 : 1;
     holder.classList.add('cell-spin');
     const t0 = performance.now();
