@@ -364,9 +364,7 @@
           box.style.width = Math.max(h * 0.8, img.offsetWidth) + 'px';
           box.style.height = h + 'px';
           box.classList.remove('landed'); box.classList.add('spinning');
-          const pool = ['seven', 'diamond', 'star', 'bar', 'melon', 'grapes', 'cherry'].map((n) => `img/symbols/${n}.png`)
-            .concat(GIRLS.map((g) => `img/icons/${g}.png`));
-          if (!/headphones/.test(img.src)) pool.push('img/prize/headphones.svg');
+          const pool = GIRLS.map((g) => `img/icons/${g}.png`); // only the baddies reel past
           const end = performance.now() + ms * 0.85;
           let last = '';
           while (!this.stop && performance.now() < end) {
