@@ -327,6 +327,8 @@
       amt.textContent = fmt(0);
       $('chestCoins').innerHTML = '';
       stage.className = 'chest-stage t' + tier + (opts.perfume ? ' perfume' : '');
+      // Prize chests (perfume, headphones) show a picture instead of cash.
+      if (opts.perfume) $('prizeImg').src = opts.prize || 'img/prize/reveal.png';
       ov.hidden = false;
       void stage.offsetWidth;
       stage.classList.add('drop');
@@ -364,7 +366,7 @@
         ov.removeEventListener('click', onClick);
         Sound.stopFanfare(); Sound.duckMusic(false); coinRain.clear(); ov.hidden = true;
         stage.className = 'chest-stage';
-        message(opts.perfume ? 'ENJOY!' : title + ' ' + fmt(total), true);
+        message(opts.prize ? `YOU WON THE ${title}!` : opts.perfume ? 'ENJOY!' : title + ' ' + fmt(total), true);
         res();
       }
       function onClick() {
@@ -562,7 +564,10 @@
       const v = orbValue(c.orb);
       if (c.orb.jp) { Sound.jackpot(); flashJackpot(c.orb.jp); } else Sound.collect(i);
       const from = total; total += v;
-      if (c.orb.jp === 'MAJOR') await banner('MAJOR PRIZE', `${MAJOR_PRIZE} \u{1F3A7}`, 2800);
+      if (c.orb.jp === 'MAJOR') {
+        await banner('MAJOR PRIZE', '', 1800);
+        await bigWin(0, MAJOR_PRIZE, 0, { perfume: true, prize: 'img/prize/headphones.svg' });
+      }
       else await rollup($('win'), from, total, c.orb.jp ? 900 : 220);
       el.classList.add('collected');
       await sleep(c.orb.jp ? 700 : 90);
