@@ -542,14 +542,22 @@ button:disabled { cursor: default; filter: grayscale(.7) brightness(.6); }
   color: #fff; text-shadow: 0 2px 0 #5a1a00, 0 0 14px #ffb02e;
 }
 .chest-stage.perfume .bigwin-cn { display: none; }
-/* prize reel: decoys streak through a window, then the real prize drops in; the title waits for it */
-.prize-reel { position: relative; display: none; }
+/* prize build-up: rises as a dark silhouette whose glow and tremble grow (--p 0 -> 1), then flashes into colour; the title waits for it */
+.prize-reel { --p: 0; position: relative; display: none; }
 .chest-stage.perfume .prize-reel { display: block; }
-.prize-reel.spinning { overflow: hidden; -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); }
-.prize-reel.spinning .prize-img { visibility: hidden; }
-.prize-reel .decoy { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: blur(1.5px) drop-shadow(0 0 14px rgba(255, 220, 140, .7)); }
-.prize-reel.landed .prize-img { animation: prizeLand .45s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes prizeLand { 0% { transform: translateY(-60%); } 70% { transform: translateY(6%); } 100% { transform: none; } }
+.chest-stage.perfume.reeling .prize-reel { animation: prizeTremble .09s linear infinite; }
+.chest-stage.perfume.reeling .prize-img {
+  filter: brightness(calc(.05 + var(--p) * .2)) drop-shadow(0 0 calc(6px + var(--p) * 34px) rgba(255, 215, 120, calc(.45 + var(--p) * .55)));
+}
+@keyframes prizeTremble {
+  25% { transform: translate(calc(var(--p) * -4px), calc(var(--p) * 2px)) rotate(calc(var(--p) * -1.5deg)); }
+  75% { transform: translate(calc(var(--p) * 4px), calc(var(--p) * -2px)) rotate(calc(var(--p) * 1.5deg)); }
+}
+.prize-reel.lit .prize-img { animation: prizeFlash .9s ease-out; }
+@keyframes prizeFlash {
+  0% { filter: brightness(4) drop-shadow(0 0 60px #fff); transform: scale(1.18); }
+  100% { filter: brightness(1) drop-shadow(0 0 24px rgba(255, 220, 140, .9)); transform: scale(1); }
+}
 .chest-stage.perfume .bigwin-title { transition: opacity .3s, transform .5s cubic-bezier(.3, 1.6, .5, 1); }
 .chest-stage.perfume.reeling .bigwin-title { opacity: 0; transform: scale(.4); }
 .chest-stage.perfume .bigwin-title { font-size: clamp(26px, min(7vw, 7vh), 60px); }

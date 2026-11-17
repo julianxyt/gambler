@@ -352,35 +352,24 @@
         if (opts.perfume) reel.run(riseMs).then(breathe);
         else rollup(amt, 0, total, riseMs).then(breathe);
       }
-      // Prize chests: other symbols streak through like a reel, slowing down, then the real prize
-      // drops in and only then does its name appear.
+      // Prize chests: the prize rises as a dark glowing silhouette, trembling harder and harder,
+      // then flashes into full colour and only then does its name appear.
       const reel = {
         stop: false,
         async run(ms) {
-          const box = $('prizeReel'), img = $('prizeImg');
-          try { await img.decode(); } catch (e) { /* show it anyway */ }
-          box.style.width = box.style.height = '';
-          const h = img.offsetHeight || 200; // offset sizes ignore the rising scale transform
-          box.style.width = Math.max(h * 0.8, img.offsetWidth) + 'px';
-          box.style.height = h + 'px';
-          box.classList.remove('landed'); box.classList.add('spinning');
-          const pool = GIRLS.map((g) => `img/icons/${g}.png`); // only the baddies reel past
-          const end = performance.now() + ms * 0.85;
-          let last = '';
-          while (!this.stop && performance.now() < end) {
-            const left = (end - performance.now()) / (ms * 0.85); // 1 -> 0
-            const dur = 90 + (1 - left) * (1 - left) * 260; // starts quick, slows to a crawl
-            let src; do { src = pool[(Math.random() * pool.length) | 0]; } while (src === last); last = src;
-            const d = document.createElement('img'); d.className = 'decoy'; d.src = src; box.appendChild(d);
-            Sound.reelTick();
-            await d.animate([{ transform: 'translateY(-105%)' }, { transform: 'translateY(105%)' }], { duration: dur, easing: 'linear' }).finished.catch(() => {});
-            d.remove();
+          const box = $('prizeReel');
+          box.classList.remove('lit'); box.style.setProperty('--p', 0);
+          Sound.anticipation(ms / 1000);
+          const t0 = performance.now();
+          while (!this.stop && performance.now() - t0 < ms) {
+            box.style.setProperty('--p', ((performance.now() - t0) / ms).toFixed(3));
+            await sleep(50);
           }
-          box.querySelectorAll('.decoy').forEach((d) => d.remove());
-          box.classList.remove('spinning'); void box.offsetWidth; box.classList.add('landed');
-          Sound.reelStop(2); Sound.jackpot();
+          box.style.setProperty('--p', 1);
+          box.classList.add('lit');
+          Sound.jackpot();
           stage.classList.remove('reeling');
-          await sleep(500);
+          await sleep(600);
         },
       };
       function breathe() {
