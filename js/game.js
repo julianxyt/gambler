@@ -525,21 +525,35 @@
     const lights = () => hud.querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < respins));
     lights();
     message('BADDIES LOCK IN PLACE');
-    await sleep(700);
+    await sleep(900);
+    message('TAP EMPTY SPOTS TO BOOST THEM');
+
+    // Tap an empty spot to boost it (up to 3 taps): it glows and is more likely to land a baddie.
+    const holderOf = (c) => reels[c.r].strip.children[c.row + 1];
+    const onTap = (e) => {
+      const el = e.target.closest('.cell'); if (!el) return;
+      const c = cells.find((x) => holderOf(x) === el);
+      if (!c || c.orb || (c.boost || 0) >= 3) return;
+      c.boost = (c.boost || 0) + 1;
+      el.classList.add('boost'); el.dataset.boost = c.boost;
+      Sound.sparkle(); burstAt(el, 3);
+    };
+    reelsEl.addEventListener('click', onTap);
 
     while (respins > 0 && locked < 15) {
       respins--; lights();
       Sound.respinStart();
       const empties = cells.filter((c) => !c.orb);
-      // Rigged run: one or two girls land on every respin, so the grid always fills.
-      const picks = S.rig ? new Set(shuffle(empties.slice()).slice(0, Math.min(empties.length, Math.random() < 0.45 ? 2 : 1))) : null;
-      // ...and once only a few spots are left, one of them lands the MAJOR (headphones).
-      const majorCell = picks && !majorLanded && empties.length <= 4 ? [...picks][0] : null;
+      // Rigged run: normal odds (plus taps), but the MAJOR (headphones) is guaranteed. It may come early
+      // by chance, and if it still hasn't landed by the last respin (or the last spot), it lands then,
+      // on the spot he boosted most.
+      const majorNow = S.rig && !majorLanded && (respins === 0 || empties.length <= 1 || Math.random() < 0.15);
+      const majorCell = majorNow ? empties.slice().sort((a, b) => (b.boost || 0) - (a.boost || 0) || Math.random() - 0.5)[0] : null;
       let gotNew = false;
       // Slower than the base game: each empty spot keeps streaking for a while, and they settle one by one.
       const order = shuffle(empties.slice());
       await Promise.all(empties.map((c) => spinCell(c, (S.turbo ? 700 : 1500) + order.indexOf(c) * (S.turbo ? 120 : 260),
-        picks ? (c === majorCell ? 'MAJOR' : picks.has(c)) : undefined).then((orb) => {
+        c === majorCell ? 'MAJOR' : undefined).then((orb) => {
         if (!orb) return;
         c.orb = orb; gotNew = true;
         Sound.coinHit(locked, !!orb.jp); locked++;
@@ -576,6 +590,8 @@
 
     await payWin(total, locked >= 15 ? 'FULL BOARD WIN' : 'HOLD & SPIN WIN');
     app.classList.remove('feature');
+    reelsEl.removeEventListener('click', onTap);
+    reelsEl.querySelectorAll('.cell.boost').forEach((el) => { el.classList.remove('boost'); delete el.dataset.boost; });
     S.feature = false;
     S.grid = grid;
     for (let r = 0; r < 5; r++) renderReel(r, grid[r]);
@@ -600,8 +616,6 @@
   }
   async function spinCell(c, ms, force) {
     const holder = reels[c.r].strip.children[c.row + 1];
-    const hit = force === undefined ? Math.random() < RESPIN_ODDS : !!force;
-    const land = force === 'MAJOR' ? { s: 'orb', jp: 'MAJOR', g: girl() } : hit ? makeOrb(true) : null;
     const k = S.turbo ? 0.6 : 1;
     holder.classList.add('cell-spin');
     const t0 = performance.now();
@@ -616,7 +630,12 @@
       }
       passes++;
     }
+    // Decided at the end, so taps made while it was streaking still count.
+    const odds = Math.min(0.6, RESPIN_ODDS + 0.12 * (c.boost || 0));
+    const hit = force === undefined ? Math.random() < odds : !!force;
+    const land = force === 'MAJOR' ? { s: 'orb', jp: 'MAJOR', g: girl() } : hit ? makeOrb(true) : null;
     if (land) {
+      holder.classList.remove('boost'); delete holder.dataset.boost;
       // the real one drops in, overshoots a touch and settles
       const f = await streak(holder, land, 320 * k, [
         { transform: 'translateY(-110%)', filter: 'blur(2px)' },
@@ -746,11 +765,35 @@
     S.revealPending = false; S.busy = true; S.auto = false; updateUI();
     Sound.duckMusic(true);
     await sleep(500);
-    await say('BUT WAIT...', 1600, true);
-    Sound.jackpot();
-    await say('YOU ALSO WON THE MYSTERY GRAND JACKPOT!', 1500);
+    await say('BUT WAIT...', 1800, true);
+    await say('YOU SMELL SOMETHING ELSE COMING...', 1800);
+    await mysteryRoll(S.turbo ? 2600 : 4500);
     await bigWin(0, 'LE LABO PERFUME', 0, { perfume: true });
     S.busy = false; updateUI();
+  }
+
+  // The MYSTERY GRAND plaque: glyphs scramble, a drum roll builds, the plaque shakes harder and glows
+  // brighter, then a white flash and a gong.
+  function mysteryRoll(ms) {
+    return new Promise((res) => {
+      const ov = $('mystery'), g = $('myGlyphs');
+      const glyphs = ['?', '?', '★', '♦', '✦', '♥', '$'];
+      ov.className = 'overlay mystery'; ov.style.setProperty('--p', '0'); ov.hidden = false;
+      Sound.mystery(true);
+      setTimeout(() => Sound.anticipation(ms / 1000 - 0.6), 600);
+      const t0 = performance.now();
+      const iv = setInterval(() => {
+        const p = Math.min(1, (performance.now() - t0) / ms);
+        g.textContent = Array.from({ length: 5 }, () => glyphs[(Math.random() * glyphs.length) | 0]).join('');
+        ov.style.setProperty('--p', p.toFixed(2));
+        if (p >= 1) {
+          clearInterval(iv);
+          g.textContent = '?????';
+          ov.classList.add('flash'); Sound.jackpot();
+          setTimeout(() => { ov.hidden = true; ov.className = 'overlay mystery'; res(); }, 1000);
+        }
+      }, 70);
+    });
   }
 
   // ---------- Paytable ----------

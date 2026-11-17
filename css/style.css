@@ -684,3 +684,48 @@ button:disabled { cursor: default; filter: grayscale(.7) brightness(.6); }
 
 /* MAJOR plaque shows a prize name instead of cash */
 .jp-major .jp-val { font-size: clamp(11px, 2.3vw, 18px); letter-spacing: .02em; white-space: nowrap; }
+
+/* ---------- Hold & Spin: tapped (boosted) empty spots ---------- */
+.feature .cell { cursor: pointer; }
+.cell.boost::before {
+  content: ""; position: absolute; inset: 6%; border-radius: 14px; pointer-events: none;
+  box-shadow: 0 0 0 2px #ffe066, 0 0 14px 3px rgba(255, 200, 60, .7), inset 0 0 18px rgba(255, 210, 90, .45);
+  animation: boostPulse .9s ease-in-out infinite;
+}
+.cell.boost[data-boost="2"]::before { box-shadow: 0 0 0 3px #ffe066, 0 0 22px 6px rgba(255, 190, 50, .85), inset 0 0 24px rgba(255, 210, 90, .6); }
+.cell.boost[data-boost="3"]::before { box-shadow: 0 0 0 4px #fff3b0, 0 0 32px 10px rgba(255, 170, 40, .95), inset 0 0 30px rgba(255, 220, 110, .8); }
+@keyframes boostPulse { 50% { opacity: .55; } }
+
+/* ---------- mystery grand jackpot build-up ---------- */
+.mystery {
+  --p: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(90, 30, 140, calc(.6 + var(--p) * .4)), #050008 75%);
+  overflow: hidden;
+}
+.mystery::before { /* rays that speed up and brighten */
+  content: ""; position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; translate: -50% -50%;
+  background: repeating-conic-gradient(rgba(255, 220, 120, calc(.04 + var(--p) * .2)) 0 6deg, transparent 6deg 14deg);
+  animation: spinRays 6s linear infinite; pointer-events: none;
+}
+.my-inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2.4vh; text-align: center; padding: 0 16px; }
+.my-title {
+  font-family: 'Cinzel Decorative', Cinzel, serif; font-weight: 900; font-size: clamp(24px, 5.4vw, 52px); line-height: 1.15;
+  background: linear-gradient(180deg, #fffbe0, #ffe066 40%, #f0a91c 70%, #b06a08); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 #2a0a00) drop-shadow(0 0 calc(10px + var(--p) * 30px) rgba(220, 150, 255, .8));
+}
+.my-plaque {
+  padding: .25em .9em; border-radius: 18px;
+  font-family: 'Cinzel Decorative', Cinzel, serif; font-weight: 900; font-size: clamp(40px, 10vw, 110px); letter-spacing: .12em; color: #fff;
+  background: linear-gradient(180deg, #ff4b3a, #8a0612);
+  box-shadow: 0 0 0 4px #ffd54a, 0 0 0 8px #7a4a08, 0 0 calc(20px + var(--p) * 90px) calc(var(--p) * 30px) rgba(255, 200, 80, .9);
+  text-shadow: 0 3px 0 #4a0008, 0 0 18px rgba(255, 240, 180, .9);
+  transform: scale(calc(1 + var(--p) * .18));
+  animation: myShake .09s linear infinite;
+}
+@keyframes myShake {
+  25% { translate: calc(var(--p) * 7px) calc(var(--p) * -3px); }
+  75% { translate: calc(var(--p) * -7px) calc(var(--p) * 3px); }
+}
+.my-sub { font-weight: 800; letter-spacing: .4em; color: #e8d0ff; font-size: clamp(12px, 2.2vw, 18px); animation: hintBlink 1s ease-in-out infinite; }
+.mystery.flash::after { content: ""; position: absolute; inset: 0; background: #fff; animation: myFlash 1s ease-out forwards; pointer-events: none; }
+@keyframes myFlash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
