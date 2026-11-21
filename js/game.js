@@ -15,14 +15,10 @@
   const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
-  // The rigged feature (Hold & Spin that fills all 15, then the reveal) lands on a random paid spin,
-  // drawn from a bell curve around spin 20 (sd 4). No feature of any kind can land in the first 10 spins.
+  // The rigged feature (Hold & Spin with the headphones, then the reveal) always lands on paid spin
+  // 14, 15 or 16, picked at random. No feature of any kind can land in the first 10 spins.
   const QUIET_SPINS = 10;
-  const RIG_SPIN = (() => {
-    let z = 0; for (let i = 0; i < 6; i++) z += Math.random(); // sum of 6 uniforms ~ normal(3, 0.71)
-    const n = Math.round(20 + ((z - 3) / 0.7071) * 4);
-    return Math.min(32, Math.max(QUIET_SPINS + 1, n));
-  })();
+  const RIG_SPIN = 14 + Math.floor(Math.random() * 3);
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
   const ORB_MULTS = [[1, 20], [2, 18], [3, 14], [4, 10], [5, 9], [8, 6], [10, 4], [15, 2], [20, 1]];
