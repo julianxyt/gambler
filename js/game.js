@@ -11,7 +11,7 @@
     A: [0.5, 1.2, 4], K: [0.4, 1, 3], Q: [0.4, 1, 3], J: [0.3, 0.8, 2.5],
   };
   const NAMES = { seven: '7', diamond: 'Diamond', star: 'Star', bar: 'BAR', melon: 'Watermelon', grapes: 'Grapes', cherry: 'Cherry', A: 'A', K: 'K', Q: 'Q', J: 'J' };
-  const WEIGHTS = { seven: 6, diamond: 7, star: 7, bar: 8, melon: 8, grapes: 8, cherry: 8, A: 8, K: 8, Q: 8, J: 8, wild: 1, orb: 15, scatter: 6 };
+  const WEIGHTS = { seven: 6, diamond: 7, star: 7, bar: 8, melon: 8, grapes: 8, cherry: 8, A: 8, K: 8, Q: 8, J: 8, wild: 2.3, orb: 15, scatter: 6 }; // wild 2.3: ~1 spin in 7 pays
   const FS_WEIGHTS = { ...WEIGHTS, wild: 11 }; // extra wilds during free spins so the feature rarely pays nothing
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
