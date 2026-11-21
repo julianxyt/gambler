@@ -16,10 +16,9 @@
   const GIRLS = ['kgirl', 'abg', 'pomw', 'pomb'];
   const FS_COUNT = 8, FS_MULT = 2;   // free spins
   // The rigged feature (Hold & Spin with the headphones, then the reveal) always lands on paid spin
-  // 14, 15 or 16, picked at random. No other feature (Hold & Spin or free spins) can land before it,
-  // so the first feature he ever sees is the rigged one.
+  // 14, 15 or 16, picked at random. Before that the game plays normally (features can land by chance).
   const RIG_SPIN = 14 + Math.floor(Math.random() * 3);
-  const QUIET_SPINS = RIG_SPIN - 1;
+  const QUIET_SPINS = 0;
   const JP = { MINI: 10, MINOR: 25, MAJOR: 150, GRAND: 1000 }; // x bet
   const BETS = [0.5, 1, 2, 3, 5, 10, 20, 50];
   const ORB_MULTS = [[1, 20], [2, 18], [3, 14], [4, 10], [5, 9], [8, 6], [10, 4], [15, 2], [20, 1]];
